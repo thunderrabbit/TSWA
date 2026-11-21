@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>TSWA — Tri-Scale Weather App</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0b1220; --card: #131e33; --card2: #182642; --line: #24365a;
+    --text: #eef3fb; --muted: #9db1cf; --accent: #ffb454; --accent2: #57c7ff;
+  }
+  body {
+    background: var(--bg); color: var(--text);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    padding: 16px 14px 28px; max-width: 560px; margin: 0 auto;
+    overflow-x: hidden;
+  }
+  header { text-align: center; margin-bottom: 14px; }
+  header h1 { font-size: 30px; letter-spacing: 2px; }
+  header h1 span { color: var(--accent); }
+  header .full { color: var(--muted); font-size: 14px; margin-top: 2px; }
+  header .why { color: var(--muted); font-size: 11.5px; margin-top: 6px; font-style: italic; overflow-wrap: break-word; }
+  .card {
+    background: var(--card); border: 1px solid var(--line); border-radius: 16px;
+    padding: 16px; margin-bottom: 14px;
+  }
+  .card h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); margin-bottom: 10px; }
+  .pills { display: flex; gap: 8px; justify-content: center; margin-bottom: 6px; }
+  .pill {
+    padding: 5px 14px; border-radius: 999px; border: 1px solid var(--line);
+    color: var(--muted); font-size: 14px; background: var(--card2);
+  }
+  .pill.on { background: var(--accent); color: #1a1206; border-color: var(--accent); font-weight: 700; }
+  .bignum {
+    display: block; width: 100%; background: none; border: none; cursor: pointer;
+    color: var(--text); text-align: center; padding: 4px 0 0;
+    font-size: clamp(56px, 17vw, 84px); font-weight: 700; line-height: 1.05;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .bignum:active { color: var(--accent); }
+  .hint { text-align: center; color: var(--muted); font-size: 12.5px; margin-top: 2px; }
+  .verdict { text-align: center; margin-top: 10px; }
+  .verdict .t { font-size: 18px; font-weight: 700; color: var(--accent); }
+  .verdict .d { color: var(--muted); font-size: 13.5px; margin-top: 3px; }
+  .sliderwrap { margin-top: 16px; position: relative; padding: 0 2px; }
+  .sliderwrap .centre {
+    position: absolute; left: 50%; top: -4px; width: 2px; height: 12px;
+    background: var(--accent); transform: translateX(-50%); border-radius: 2px;
+  }
+  input[type=range] { width: 100%; accent-color: var(--accent); height: 32px; }
+  .sliderlabels { display: flex; justify-content: space-between; color: var(--muted); font-size: 12px; }
+  .presets { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; justify-content: center; }
+  .presets button, .places button {
+    background: var(--card2); color: var(--text); border: 1px solid var(--line);
+    border-radius: 999px; padding: 7px 13px; font-size: 13.5px; cursor: pointer;
+  }
+  .presets button:active, .places button:active { border-color: var(--accent); color: var(--accent); }
+  .searchrow { display: flex; gap: 8px; margin-bottom: 10px; }
+  .searchrow input {
+    flex: 1; min-width: 0; background: var(--card2); border: 1px solid var(--line);
+    border-radius: 10px; color: var(--text); padding: 10px 12px; font-size: 15px;
+  }
+  .searchrow button {
+    background: var(--accent); border: none; color: #1a1206; font-weight: 700;
+    border-radius: 10px; padding: 10px 16px; font-size: 15px; cursor: pointer;
+  }
+  .places { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 6px; }
+  .wxplace { font-size: 17px; font-weight: 700; }
+  .wxcond { color: var(--muted); font-size: 14px; margin-top: 2px; }
+  .wxgrid { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+  .wxgrid .cell {
+    flex: 1 1 30%; background: var(--card2); border: 1px solid var(--line);
+    border-radius: 12px; padding: 10px; text-align: center; min-width: 0;
+  }
+  .wxgrid .cell .v { font-size: 17px; font-weight: 700; overflow-wrap: break-word; }
+  .wxgrid .cell .k { color: var(--muted); font-size: 11.5px; text-transform: uppercase; letter-spacing: 1px; margin-top: 2px; }
+  .hourly { display: flex; gap: 8px; overflow-x: auto; margin-top: 12px; padding-bottom: 4px; }
+  .hourly .h {
+    flex: 0 0 auto; background: var(--card2); border: 1px solid var(--line);
+    border-radius: 12px; padding: 8px 10px; text-align: center;
+  }
+  .hourly .h .t { font-weight: 700; font-size: 15px; }
+  .hourly .h .k { color: var(--muted); font-size: 11.5px; }
+  .status { color: var(--muted); font-size: 13px; margin-top: 8px; text-align: center; }
+  details { margin-top: 6px; }
+  summary { cursor: pointer; color: var(--accent2); font-size: 14px; }
+  table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13.5px; }
+  td { padding: 6px 4px; border-bottom: 1px solid var(--line); }
+  td:last-child { text-align: right; color: var(--muted); }
+  footer { text-align: center; color: var(--muted); font-size: 12px; margin-top: 8px; overflow-wrap: break-word; }
+  footer a { color: var(--accent2); }
+</style>
+</head>
+<body>
+<header>
+  <h1>TS<span>WA</span></h1>
+  <div class="full">Tri-Scale Weather App</div>
+  <div class="why">Wdgwar4ctcts — “why does Google's weather app require four clicks to change temperature scale?” Here: tap the number. One tap.</div>
+</header>
+
+<section class="card" id="converter">
+  <h2>Temperature converter</h2>
+  <div class="pills" id="pills">
+    <span class="pill" data-u="0">°C</span><span class="pill" data-u="1">°F</span><span class="pill" data-u="2">K</span>
+  </div>
+  <button class="bignum" id="bignum" aria-label="Tap to step to the next temperature scale">22.0°</button>
+  <div class="hint">Tap the number to step °C → °F → K</div>
+  <div class="verdict"><div class="t" id="vtitle"></div><div class="d" id="vdesc"></div></div>
+  <div class="sliderwrap">
+    <div class="centre"></div>
+    <input type="range" id="jog" min="-50" max="50" step="1" value="0" aria-label="Slide to adjust the temperature; it springs back to the centre">
+  </div>
+  <div class="sliderlabels"><span>◀ slide: cooler</span><span>warmer ▶</span></div>
+  <div class="presets" id="presets"></div>
+</section>
+
+<section class="card" id="weather">
+  <h2>Weather</h2>
+  <div class="searchrow">
+    <input id="q" type="search" placeholder="Search a place…" autocomplete="off">
+    <button id="go">Go</button>
+  </div>
+  <div class="places" id="places"></div>
+  <div class="wxplace" id="wxplace">Adelaide, Australia</div>
+  <div class="wxcond" id="wxcond">Loading…</div>
+  <button class="bignum" id="wxnum" aria-label="Current temperature. Tap to step to the next temperature scale">–</button>
+  <div class="hint">Same scale as the converter, always. Tap to step it.</div>
+  <div class="wxgrid">
+    <div class="cell"><div class="v" id="wxfeels">–</div><div class="k">Feels like</div></div>
+    <div class="cell"><div class="v" id="wxhi">–</div><div class="k">High</div></div>
+    <div class="cell"><div class="v" id="wxlo">–</div><div class="k">Low</div></div>
+  </div>
+  <div class="hourly" id="hourly"></div>
+  <div class="status" id="wxstatus"></div>
+</section>
+
+<section class="card">
+  <h2>Landmarks</h2>
+  <details>
+    <summary>Temperatures worth knowing</summary>
+    <table id="landmarks"></table>
+  </details>
+  <p class="status">F = C × 9/5 + 32 &nbsp;·&nbsp; K = C + 273.15 &nbsp;·&nbsp; Weather data: Open-Meteo (CC BY 4.0), stored as Celsius, converted only for display.</p>
+</section>
+
+<footer>TSWA — Tri-Scale Weather App · GPL-3.0 · Made so Rob can tell family in the USA what the weather is in Adelaide.</footer>
+
+<script>
+"use strict";
+// ---------- state: Celsius is the only stored truth; convert at display ----------
+const SCALES = [
+  { name: "Celsius",    sym: "°C", from: c => c,                 digits: 1 },
+  { name: "Fahrenheit", sym: "°F", from: c => c * 9 / 5 + 32,    digits: 1 },
+  { name: "Kelvin",     sym: "K",  from: c => c + 273.15,        digits: 1 }
+];
+let unit = 0;                 // index into SCALES
+let tempC = 22;               // converter temperature, Celsius
+let wx = null;                // last weather payload (all Celsius)
+
+const $ = id => document.getElementById(id);
+const fmt = (c, withSym = true) => {
+  const s = SCALES[unit];
+  const v = s.from(c).toFixed(s.digits);
+  return withSym ? v + s.sym : v;
+};
+
+// ---------- verdicts: funny, but factually grounded (mg #882 set) ----------
+const VERDICTS = [
+  [-273.15, "Absolute zero", "Nothing moves. Nothing can be colder; this is the floor of physics."],
+  [-219,    "Oxygen liquefies", "Colder than the coldest place in the solar system's plans for your picnic."],
+  [-196,    "Liquid nitrogen boils", "It boils at this temperature. Your drink would shatter, not freeze."],
+  [-138.8,  "Colder than anywhere on Earth, ever", "Below −138.8 °F territory — no weather station has ever recorded this."],
+  [-89.2,   "Vostok, Antarctica, 1983", "−89.2 °C: the coldest natural temperature ever measured on Earth."],
+  [-78.5,   "Dry ice sublimates", "Solid carbon dioxide turns straight to gas here. Spooky fog included."],
+  [-40,     "The crossover point", "−40 is the one temperature that is the same in Celsius and Fahrenheit."],
+  [-39.9,   "Dangerously cold", "Exposed skin can freeze in minutes. Stay inside."],
+  [-0.1,    "Below freezing", "Water is ice, roads are treacherous, pipes are nervous."],
+  [0,       "Freezing point", "Water freezes at 0 °C / 32 °F. Exactly here."],
+  [8,       "Cold", "Proper coat weather."],
+  [15,      "Cool", "A jumper, maybe. Light jacket, definitely."],
+  [22,      "Mild", "Perfectly pleasant nothing-to-complain-about weather."],
+  [27,      "Pleasant", "T-shirt weather. Enjoy it."],
+  [32,      "Warm", "Shorts weather for most humans."],
+  [38,      "Hot", "Seek shade, drink water, slow down."],
+  [45,      "Very hot", "Dangerous for exertion. Adelaide knows this one well."],
+  [56.7,    "Extreme heat", "Approaching the hottest ever reliably measured on Earth."],
+  [100,     "Death Valley record heat", "56.7 °C / 134 °F, Death Valley, 1913. Beyond this: no weather, only ovens."],
+  [180,     "Water boils", "100 °C / 212 °F. Kettle's done."],
+  [232,     "Oven temperature", "A moderate oven. Cookies, not people."],
+  [260,     "Paper burns", "451 °F, famously. Books and pizza crusts beware."],
+  [1e9,     "Pizza oven", "500 °F territory. Ninety seconds to perfect leopard-spotting."]
+];
+function verdict(c) {
+  for (const [limit, t, d] of VERDICTS) if (c <= limit) return { t, d };
+  return VERDICTS[VERDICTS.length - 1];
+}
+
+// ---------- converter ----------
+const PRESETS = [
+  ["Absolute zero", -273.15], ["Vostok record", -89.2], ["−40 crossover", -40],
+  ["Freezing", 0], ["Adelaide now-ish", 23.6], ["Body temp", 37],
+  ["Death Valley record", 56.7], ["Boiling", 100], ["Pizza oven", 260]
+];
+function renderConverter() {
+  $("bignum").textContent = fmt(tempC);
+  document.querySelectorAll("#pills .pill").forEach((p, i) => p.classList.toggle("on", i === unit));
+  const v = verdict(tempC);
+  $("vtitle").textContent = v.t;
+  $("vdesc").textContent = v.d;
+}
+function cycleUnit() { unit = (unit + 1) % SCALES.length; renderConverter(); renderWeather(); }
+$("bignum").addEventListener("click", cycleUnit);
+$("wxnum").addEventListener("click", cycleUnit);
+
+const jog = $("jog");
+let jogBase = null;
+jog.addEventListener("pointerdown", () => { jogBase = tempC; });
+jog.addEventListener("input", () => {
+  if (jogBase === null) jogBase = tempC;
+  tempC = Math.max(-273.15, +(jogBase + Number(jog.value) * 0.2).toFixed(2));
+  renderConverter();
+});
+const springBack = () => { jog.value = 0; jogBase = null; };
+jog.addEventListener("change", springBack);
+jog.addEventListener("pointerup", springBack);
+jog.addEventListener("blur", springBack);
+
+PRESETS.forEach(([label, c]) => {
+  const b = document.createElement("button");
+  b.textContent = label; b.addEventListener("click", () => { tempC = c; renderConverter(); });
+  $("presets").appendChild(b);
+});
+
+// landmarks table follows the current scale
+const LANDMARKS = [
+  ["Absolute zero", -273.15], ["Oxygen liquefies", -218.8], ["Liquid nitrogen boils", -195.8],
+  ["Coldest ever on Earth (Vostok 1983)", -89.2], ["Dry ice sublimates", -78.5],
+  ["Celsius = Fahrenheit", -40], ["Water freezes", 0], ["Human body", 37],
+  ["Hottest ever on Earth (Death Valley 1913)", 56.7], ["Water boils", 100],
+  ["Moderate oven", 180], ["Paper burns", 232], ["Pizza oven", 260]
+];
+function renderLandmarks() {
+  $("landmarks").innerHTML = LANDMARKS.map(([label, c]) =>
+    "<tr><td>" + label + "</td><td>" + fmt(c) + "</td></tr>").join("");
+}
+
+// ---------- weather (Open-Meteo, free, no key) ----------
+const WMO = {0:"Clear sky",1:"Mainly clear",2:"Partly cloudy",3:"Overcast",45:"Fog",48:"Rime fog",
+  51:"Light drizzle",53:"Drizzle",55:"Dense drizzle",61:"Light rain",63:"Rain",65:"Heavy rain",
+  66:"Freezing rain",67:"Freezing rain",71:"Light snow",73:"Snow",75:"Heavy snow",77:"Snow grains",
+  80:"Light showers",81:"Showers",82:"Violent showers",85:"Snow showers",86:"Snow showers",
+  95:"Thunderstorm",96:"Thunderstorm with hail",99:"Thunderstorm with hail"};
+const PLACES = [
+  ["Adelaide", -34.9285, 138.6007, "Adelaide, Australia"],
+  ["Somerton Park", -34.9803, 138.5124, "Somerton Park, Australia"],
+  ["Tokyo", 35.6762, 139.6503, "Tokyo, Japan"],
+  ["London", 51.5074, -0.1278, "London, UK"],
+  ["New York", 40.7128, -74.006, "New York, USA"],
+  ["Sydney", -33.8688, 151.2093, "Sydney, Australia"]
+];
+PLACES.forEach(([label, la, lo, full]) => {
+  const b = document.createElement("button");
+  b.textContent = label;
+  b.addEventListener("click", () => loadWeather(la, lo, full));
+  $("places").appendChild(b);
+});
+
+async function loadWeather(lat, lon, label) {
+  $("wxstatus").textContent = "Fetching…";
+  const url = "https://api.open-meteo.com/v1/forecast?latitude=" + lat + "&longitude=" + lon +
+    "&current=temperature_2m,apparent_temperature,weather_code" +
+    "&hourly=temperature_2m&daily=temperature_2m_max,temperature_2m_min&forecast_days=1&timezone=auto";
+  try {
+    const r = await fetch(url);
+    if (!r.ok) throw new Error("HTTP " + r.status);
+    wx = await r.json();
+    $("wxplace").textContent = label;
+    localStorage.setItem("tswa-wx", JSON.stringify({ wx, label }));
+    $("wxstatus").textContent = "Updated just now · Open-Meteo";
+  } catch (e) {
+    $("wxstatus").textContent = "Could not fetch weather (offline?). Showing the last good data if any.";
+  }
+  renderWeather();
+}
+function renderWeather() {
+  renderLandmarks();
+  if (!wx || !wx.current) return;
+  $("wxnum").textContent = fmt(wx.current.temperature_2m);
+  $("wxcond").textContent = WMO[wx.current.weather_code] || "—";
+  $("wxfeels").textContent = fmt(wx.current.apparent_temperature);
+  $("wxhi").textContent = fmt(wx.daily.temperature_2m_max[0]);
+  $("wxlo").textContent = fmt(wx.daily.temperature_2m_min[0]);
+  const times = wx.hourly.time, temps = wx.hourly.temperature_2m;
+  const nowH = new Date().getHours();
+  let html = "";
+  for (let i = nowH; i < Math.min(nowH + 8, times.length); i++) {
+    html += "<div class='h'><div class='k'>" + times[i].slice(11, 16) + "</div><div class='t'>" + fmt(temps[i]) + "</div></div>";
+  }
+  $("hourly").innerHTML = html;
+}
+async function searchPlace() {
+  const q = $("q").value.trim();
+  if (!q) return;
+  $("wxstatus").textContent = "Searching…";
+  try {
+    const r = await fetch("https://geocoding-api.open-meteo.com/v1/search?count=1&language=en&name=" + encodeURIComponent(q));
+    const j = await r.json();
+    if (!j.results || !j.results.length) { $("wxstatus").textContent = "No place found for “" + q + "”."; return; }
+    const p = j.results[0];
+    loadWeather(p.latitude, p.longitude, p.name + ", " + (p.country || ""));
+  } catch (e) { $("wxstatus").textContent = "Search failed (offline?)."; }
+}
+$("go").addEventListener("click", searchPlace);
+$("q").addEventListener("keydown", e => { if (e.key === "Enter") searchPlace(); });
+
+// restore last good weather, then refresh Adelaide by default
+try {
+  const saved = JSON.parse(localStorage.getItem("tswa-wx") || "null");
+  if (saved) { wx = saved.wx; $("wxplace").textContent = saved.label; }
+} catch (e) {}
+renderConverter();
+renderWeather();
+loadWeather(-34.9285, 138.6007, "Adelaide, Australia");
+</script>
+</body>
+</html>
