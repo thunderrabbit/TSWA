@@ -71,7 +71,16 @@ jobs:
           TSWA_KEYSTORE_PASSWORD: ${{ secrets.TSWA_KEYSTORE_PASSWORD }}
           TSWA_KEY_ALIAS: ${{ secrets.TSWA_KEY_ALIAS }}
           TSWA_KEY_PASSWORD: ${{ secrets.TSWA_KEY_PASSWORD }}
-        run: gradle :app:assembleRelease --stacktrace
+        run: |
+          set +e
+          gradle :app:assembleRelease --stacktrace 2>&1 | tee build-release.log
+          code=${PIPESTATUS[0]}
+          if [ "$code" != "0" ]; then
+            echo "Release build failed; publishing the error extract as an annotation."
+            MSG=$( (grep -m1 -A5 "What went wrong" build-release.log || tail -25 build-release.log) | sed -e 's/\x1b\[[0-9;]*m//g' | head -c 900 | sed -e 's/%/%25/g' -e 's/\r/%0D/g' | awk '{printf "%s%%0A", $0}')
+            echo "::error title=Release build failure::$MSG"
+            exit $code
+          fi
 
       - name: Upload release APK
         if: ${{ env.HAS_KEYSTORE == 'true' }}
