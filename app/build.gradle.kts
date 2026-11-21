@@ -26,7 +26,7 @@ android {
                 storeType = "PKCS12"
                 storePassword = System.getenv("TSWA_KEYSTORE_PASSWORD")?.trim()
                 keyAlias = System.getenv("TSWA_KEY_ALIAS")?.trim()?.lowercase()
-                keyPassword = System.getenv("TSWA_KEY_PASSWORD")?.trim()
+                keyPassword = System.getenv("TSWA_KEYSTORE_PASSWORD")?.trim() // PKCS12: key password == store password by construction
             }
         }
     }
