@@ -62,14 +62,16 @@ jobs:
           TSWA_KEY_ALIAS: ${{ secrets.TSWA_KEY_ALIAS }}
         run: |
           PW=$(printf '%s' "$TSWA_KEYSTORE_PASSWORD" | tr -d '\r\n')
-          keytool -list -keystore "$RUNNER_TEMP/tswa-release.jks" -storepass "$PW"
+          keytool -list -keystore "$RUNNER_TEMP/tswa-release.jks" -storepass "$PW" | tee /tmp/kslist.txt
+          FOUND=$(awk -F, '/PrivateKeyEntry/ {print $1; exit}' /tmp/kslist.txt)
+          echo "::notice title=Keystore alias::The decoded keystore holds its key under the alias: $FOUND"
+          echo "TSWA_KEY_ALIAS=$FOUND" >> "$GITHUB_ENV"
 
       - name: Build signed release APK
         if: ${{ env.HAS_KEYSTORE == 'true' }}
         env:
           TSWA_KEYSTORE_PATH: ${{ runner.temp }}/tswa-release.jks
           TSWA_KEYSTORE_PASSWORD: ${{ secrets.TSWA_KEYSTORE_PASSWORD }}
-          TSWA_KEY_ALIAS: ${{ secrets.TSWA_KEY_ALIAS }}
           TSWA_KEY_PASSWORD: ${{ secrets.TSWA_KEY_PASSWORD }}
         run: |
           set +e
