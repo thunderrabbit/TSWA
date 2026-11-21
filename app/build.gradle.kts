@@ -25,7 +25,7 @@ android {
                 storeFile = file(keystorePath)
                 storeType = "PKCS12"
                 storePassword = System.getenv("TSWA_KEYSTORE_PASSWORD")?.trim()
-                keyAlias = System.getenv("TSWA_KEY_ALIAS")?.trim()
+                keyAlias = System.getenv("TSWA_KEY_ALIAS")?.trim()?.lowercase()
                 keyPassword = System.getenv("TSWA_KEY_PASSWORD")?.trim()
             }
         }

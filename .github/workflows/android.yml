@@ -61,8 +61,8 @@ jobs:
           TSWA_KEYSTORE_PASSWORD: ${{ secrets.TSWA_KEYSTORE_PASSWORD }}
           TSWA_KEY_ALIAS: ${{ secrets.TSWA_KEY_ALIAS }}
         run: |
-          keytool -list -keystore "$RUNNER_TEMP/tswa-release.jks" \
-            -storepass "$TSWA_KEYSTORE_PASSWORD" -alias "$TSWA_KEY_ALIAS"
+          PW=$(printf '%s' "$TSWA_KEYSTORE_PASSWORD" | tr -d '\r\n')
+          keytool -list -keystore "$RUNNER_TEMP/tswa-release.jks" -storepass "$PW"
 
       - name: Build signed release APK
         if: ${{ env.HAS_KEYSTORE == 'true' }}
