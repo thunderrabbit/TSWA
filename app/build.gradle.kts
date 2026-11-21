@@ -11,7 +11,7 @@ android {
         applicationId = "com.robnugen.tswa"
         minSdk = 26
         targetSdk = 34
-        versionCode = 1
+        versionCode = (project.findProperty("tswaVersionCode") as String?)?.toIntOrNull() ?: 1
         versionName = "0.1.0"
     }
 

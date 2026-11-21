@@ -50,7 +50,7 @@ jobs:
           fi
 
       - name: Build debug APK
-        run: gradle :app:assembleDebug --stacktrace
+        run: gradle :app:assembleDebug -PtswaVersionCode=${{ github.run_number }} --stacktrace
 
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
@@ -85,7 +85,7 @@ jobs:
           TSWA_KEY_PASSWORD: ${{ secrets.TSWA_KEY_PASSWORD }}
         run: |
           set +e
-          gradle :app:assembleRelease --stacktrace 2>&1 | tee build-release.log
+          gradle :app:assembleRelease -PtswaVersionCode=${{ github.run_number }} --stacktrace 2>&1 | tee build-release.log
           code=${PIPESTATUS[0]}
           if [ "$code" != "0" ]; then
             echo "Release build failed; publishing the error extract as an annotation."
@@ -107,12 +107,12 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           TAG="v${APP_VERSION_FULL}"
-          FILES="app/build/outputs/apk/release/app-release.apk app/build/outputs/apk/debug/app-debug.apk"
+          FILES="app/build/outputs/apk/release/app-release.apk"
           if gh release view "$TAG" > /dev/null 2>&1; then
             gh release upload "$TAG" $FILES --clobber
           else
             gh release create "$TAG" $FILES \
               --title "TSWA $TAG" \
-              --notes "Automated build of TSWA (Tri-Scale Weather App) from commit ${{ github.sha }}. Install app-release.apk - that is the signed release build. app-debug.apk is there for completeness; do not mix the two, Android will not update one over the other."
+              --notes "Automated build of TSWA (Tri-Scale Weather App) from commit ${{ github.sha }}. Install app-release.apk - the signed release build. Every release is signed with the same TSWA key, so releases always install over the top of earlier releases."
           fi
           echo "::notice title=GitHub Release::Published TSWA $TAG"
