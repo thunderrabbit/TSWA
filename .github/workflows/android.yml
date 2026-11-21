@@ -8,6 +8,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Check out the repo
         uses: actions/checkout@v4
@@ -90,3 +92,20 @@ jobs:
         with:
           name: tswa-release
           path: app/build/outputs/apk/release/app-release.apk
+
+      - name: Publish GitHub Release
+        if: ${{ env.HAS_KEYSTORE == 'true' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION=$(grep -oP 'versionName = "\K[^"]+' app/build.gradle.kts)
+          TAG="v${VERSION}.${{ github.run_number }}"
+          FILES="app/build/outputs/apk/release/app-release.apk app/build/outputs/apk/debug/app-debug.apk"
+          if gh release view "$TAG" > /dev/null 2>&1; then
+            gh release upload "$TAG" $FILES --clobber
+          else
+            gh release create "$TAG" $FILES \
+              --title "TSWA $TAG" \
+              --notes "Automated build of TSWA (Tri-Scale Weather App) from commit ${{ github.sha }}. Install app-release.apk - that is the signed release build. app-debug.apk is there for completeness; do not mix the two, Android will not update one over the other."
+          fi
+          echo "::notice title=GitHub Release::Published TSWA $TAG"
