@@ -196,9 +196,9 @@ function verdict(c) {
 
 // ---------- converter ----------
 const PRESETS = [
-  ["Absolute zero", -273.15], ["Vostok record", -89.2], ["−40 crossover", -40],
+  ["Absolute zero", -273.15], ["Vostok record", -89.2], ["F/C crossover", -40],
   ["Freezing", 0], ["Adelaide now-ish", 23.6], ["Body temp", 37],
-  ["Death Valley record", 56.7], ["Boiling", 100], ["Paper burns 451\u00b0F", 232.78], ["Pizza oven", 260]
+  ["Death Valley record", 56.7], ["Boiling", 100], ["Paper burns", 232.78], ["Pizza oven", 260]
 ];
 function renderConverter() {
   $("bignum").textContent = fmt(tempC);
@@ -237,7 +237,7 @@ const LANDMARKS = [
   ["Liquid nitrogen boils", -195.8, "Liquid nitrogen boils here. Things dipped in it shatter like glass."],
   ["Vostok record - coldest ever on Earth", -89.2, "Vostok, Antarctica, 1983: the coldest natural temperature ever measured."],
   ["Dry ice sublimates", -78.5, "Solid carbon dioxide turns straight to gas. Spooky fog included."],
-  ["-40 crossover - Celsius equals Fahrenheit", -40, "The one temperature that reads the same on both scales."],
+  ["F/C crossover - Celsius equals Fahrenheit", -40, "The one temperature that reads the same on both scales."],
   ["Freezing - water freezes", 0, "Water freezes at 0 C / 32 F. Exactly here."],
   ["Body temp", 37, "37 C / 98.6 F: human body temperature. You, right now."],
   ["Death Valley record - hottest ever on Earth", 56.7, "56.7 C / 134 F, Death Valley, 1913: the hottest ever reliably measured."],
