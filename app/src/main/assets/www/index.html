@@ -16,16 +16,34 @@
     padding: 16px 14px 92px; max-width: 560px; margin: 0 auto;
     overflow-x: hidden;
   }
-  header { text-align: center; margin-bottom: 14px; }
+  header { text-align: center; margin-bottom: 10px; }
   header h1 { font-size: 30px; letter-spacing: 2px; }
   header h1 span { color: var(--accent); }
   header .full { color: var(--muted); font-size: 14px; margin-top: 2px; }
-  header .why { color: var(--muted); font-size: 12.5px; margin-top: 6px; overflow-wrap: break-word; }
+  header .why { color: var(--muted); font-size: 12.5px; margin-top: 6px; }
   .card {
     background: var(--card); border: 1px solid var(--line); border-radius: 16px;
     padding: 16px; margin-bottom: 14px;
   }
   .card h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); margin-bottom: 10px; }
+  /* ---------- pages + tab bar ---------- */
+  .page { display: none; }
+  .page.on { display: block; }
+  .tabbar {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 10;
+    display: flex; background: #0e1626;
+    border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom);
+  }
+  .tabbar button {
+    flex: 1; background: none; border: none; border-top: 3px solid transparent;
+    color: var(--muted); font-size: 14px; font-weight: 600;
+    padding: 9px 0 11px; cursor: pointer; min-height: 56px;
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .tabbar button.on { color: var(--accent); border-top-color: var(--accent); }
+  .tabbar svg { width: 22px; height: 22px; }
+  /* ---------- converter ---------- */
   .pills { display: flex; gap: 8px; justify-content: center; margin-bottom: 6px; }
   .pill {
     padding: 5px 14px; border-radius: 999px; border: 1px solid var(--line);
@@ -56,57 +74,122 @@
     border-radius: 999px; padding: 7px 13px; font-size: 13.5px; cursor: pointer;
   }
   .presets button:active, .places button:active { border-color: var(--accent); color: var(--accent); }
+  details { margin-top: 6px; }
+  summary { cursor: pointer; color: var(--accent2); font-size: 14px; }
+  table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13.5px; }
+  td { padding: 6px 4px; border-bottom: 1px solid var(--line); }
+  td:last-child { text-align: right; color: var(--muted); }
+  /* ---------- weather: place bar ---------- */
   .searchrow { display: flex; gap: 8px; margin-bottom: 10px; }
   .searchrow input {
-    flex: 1; min-width: 0; background: var(--card2); border: 1px solid var(--line);
+    flex: 1; min-width: 0; height: 44px; background: var(--card2); border: 1px solid var(--line);
     border-radius: 10px; color: var(--text); padding: 10px 12px; font-size: 15px;
   }
   .searchrow button {
     background: var(--accent); border: none; color: #1a1206; font-weight: 700;
     border-radius: 10px; padding: 10px 16px; font-size: 15px; cursor: pointer;
   }
-  .places { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 6px; }
-  .wxplace { font-size: 17px; font-weight: 700; }
-  .wxcond { color: var(--muted); font-size: 14px; margin-top: 2px; }
-  .wxgrid { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
-  .wxgrid .cell {
-    flex: 1 1 30%; background: var(--card2); border: 1px solid var(--line);
-    border-radius: 12px; padding: 10px; text-align: center; min-width: 0;
+  .places { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 2px; }
+  .places button { flex: 0 0 auto; font-size: 13px; padding: 6px 12px; }
+  /* ---------- weather: hero (Google-style, no card) ---------- */
+  .hero { text-align: center; padding: 14px 0 4px; }
+  .hero .place { font-size: 26px; font-weight: 600; }
+  .hero .cond { color: var(--muted); font-size: 15px; margin-top: 3px; }
+  .heroTemp {
+    display: block; margin: 2px auto 0; background: none; border: none; cursor: pointer;
+    color: var(--text); font-weight: 300; line-height: 1; min-height: 96px;
+    font-size: clamp(84px, 26vw, 120px); -webkit-tap-highlight-color: transparent;
   }
-  .wxgrid .cell .v { font-size: 17px; font-weight: 700; overflow-wrap: break-word; }
-  .wxgrid .cell .k { color: var(--muted); font-size: 11.5px; text-transform: uppercase; letter-spacing: 1px; margin-top: 2px; }
-  .hourly { display: flex; gap: 8px; overflow-x: auto; margin-top: 12px; padding-bottom: 4px; }
-  .hourly .h {
-    flex: 0 0 auto; background: var(--card2); border: 1px solid var(--line);
-    border-radius: 12px; padding: 8px 10px; text-align: center;
+  .heroTemp .u { font-size: 45%; vertical-align: 0.9em; color: var(--muted); font-weight: 400; }
+  .heroTemp:active { color: var(--accent); }
+  .hero .feels { color: var(--muted); font-size: 15px; margin-top: 4px; }
+  [data-temp] { cursor: pointer; }
+  [data-temp]:active { color: var(--accent) !important; }
+  .hl { text-align: center; font-size: 16px; margin-top: 12px; }
+  .hl .lo { color: var(--muted); }
+  .hl .rain { color: var(--accent2); }
+  .hintline { text-align: center; color: var(--muted); font-size: 12px; margin-top: 6px; }
+  /* ---------- weather: hourly ---------- */
+  .hourly {
+    display: flex; gap: 8px; overflow-x: auto; margin: 16px -14px 14px;
+    padding: 2px 14px 6px; scrollbar-width: none;
   }
-  .hourly .h .t { font-weight: 700; font-size: 15px; }
-  .hourly .h .k { color: var(--muted); font-size: 11.5px; }
-  .status { color: var(--muted); font-size: 13px; margin-top: 8px; text-align: center; }
-  details { margin-top: 6px; }
-  summary { cursor: pointer; color: var(--accent2); font-size: 14px; }
-  table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13.5px; }
-  td { padding: 6px 4px; border-bottom: 1px solid var(--line); }
-  td:last-child { text-align: right; color: var(--muted); }
-
-  .page { display: none; }
-  .page.on { display: block; }
-  .tabbar {
-    position: fixed; left: 0; right: 0; bottom: 0; z-index: 10;
-    display: flex; background: rgba(11, 18, 32, 0.96);
-    border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom);
+  .hourly::-webkit-scrollbar { display: none; }
+  .hourly .h { flex: 0 0 auto; width: 62px; text-align: center; border-radius: 12px; padding: 6px 2px; }
+  .hourly .h.now { background: var(--card); }
+  .hourly .h .k { color: var(--muted); font-size: 12px; }
+  .hourly .h .t { font-weight: 600; font-size: 16px; margin-top: 3px; }
+  .hourly .h .pp { color: var(--accent2); font-size: 11px; height: 14px; margin-top: 2px; }
+  .glyph { width: 22px; height: 22px; margin-top: 3px; }
+  .glyph.sun { color: var(--accent); }
+  .glyph.rain { color: var(--accent2); }
+  .glyph.cloud { color: var(--muted); }
+  /* ---------- weather: 10-day ---------- */
+  .day {
+    display: flex; align-items: center; gap: 8px; height: 52px;
+    border-bottom: 1px solid var(--line);
   }
-  .tabbar button {
-    flex: 1; background: none; border: none; color: var(--muted);
-    font-size: 15px; font-weight: 600; padding: 14px 0 12px; cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
+  .day:last-child { border-bottom: none; }
+  .day .d { width: 92px; font-size: 15px; flex: 0 0 auto; }
+  .day .glyph { width: 20px; height: 20px; margin: 0; flex: 0 0 auto; }
+  .day .pp { width: 40px; font-size: 12px; color: var(--accent2); flex: 0 0 auto; }
+  .day .lo { width: 52px; text-align: right; color: var(--muted); font-size: 15px; flex: 0 0 auto; }
+  .day .hi { width: 52px; text-align: right; font-weight: 600; font-size: 15px; flex: 0 0 auto; }
+  .rangebar { flex: 1; height: 4px; border-radius: 2px; background: var(--card2); position: relative; min-width: 24px; }
+  .rangebar .fill {
+    position: absolute; top: 0; height: 4px; border-radius: 2px;
+    background: linear-gradient(90deg, var(--accent2), var(--accent));
   }
-  .tabbar button.on { color: var(--accent); }
+  /* ---------- weather: details grid ---------- */
+  .details { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+  .details .cell { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 12px; min-width: 0; }
+  .details .cell.wide { grid-column: 1 / -1; display: flex; }
+  .details .cell.wide .half { flex: 1; }
+  .details .k { color: var(--muted); font-size: 11px; text-transform: uppercase; letter-spacing: 1px; }
+  .details .v { font-size: 20px; font-weight: 600; margin-top: 3px; overflow-wrap: break-word; }
+  .details .sub { color: var(--muted); font-size: 12.5px; margin-top: 2px; }
+  .wxfoot { text-align: center; color: var(--muted); font-size: 12px; margin: 2px 0 6px; }
   footer { text-align: center; color: var(--muted); font-size: 12px; margin-top: 8px; overflow-wrap: break-word; }
-  footer a { color: var(--accent2); }
 </style>
 </head>
 <body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="g-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+      <circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>
+    </symbol>
+    <symbol id="g-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M20 13.5A8.5 8.5 0 1 1 10.5 4a7 7 0 0 0 9.5 9.5z"/>
+    </symbol>
+    <symbol id="g-partly" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="8" cy="8" r="3"/><path d="M8 2v1.5M2 8h1.5M3.8 3.8l1 1"/>
+      <path d="M10 20h8.5a3.5 3.5 0 0 0 .6-6.9 5.5 5.5 0 0 0-10.6 1.2A3 3 0 0 0 10 20z"/>
+    </symbol>
+    <symbol id="g-cloud" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M7 18h9.5a4.5 4.5 0 0 0 .8-8.9A6 6 0 0 0 5.7 10 3.8 3.8 0 0 0 7 18z"/>
+    </symbol>
+    <symbol id="g-fog" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M7 14h9.5a4.5 4.5 0 0 0 .8-8.9A6 6 0 0 0 5.7 6 3.8 3.8 0 0 0 7 14z"/><path d="M5 18h14M7 21h11"/>
+    </symbol>
+    <symbol id="g-drizzle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M7 15h9.5a4.5 4.5 0 0 0 .8-8.9A6 6 0 0 0 5.7 7 3.8 3.8 0 0 0 7 15z"/><path d="M8 18.5h.01M12 20h.01M16 18.5h.01"/>
+    </symbol>
+    <symbol id="g-rain" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M7 15h9.5a4.5 4.5 0 0 0 .8-8.9A6 6 0 0 0 5.7 7 3.8 3.8 0 0 0 7 15z"/><path d="M8 18l-1 3M12.5 18l-1 3M17 18l-1 3"/>
+    </symbol>
+    <symbol id="g-snow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M7 15h9.5a4.5 4.5 0 0 0 .8-8.9A6 6 0 0 0 5.7 7 3.8 3.8 0 0 0 7 15z"/><path d="M8 18.5v2M8 19.5H7M8 19.5h1M12.5 18.5v2M16.5 18.5v2"/>
+    </symbol>
+    <symbol id="g-thunder" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M7 14h9.5a4.5 4.5 0 0 0 .8-8.9A6 6 0 0 0 5.7 6 3.8 3.8 0 0 0 7 14z"/><path d="M12.5 13.5 10 18h3l-1.5 4 4.5-5.5h-3l1.5-3z"/>
+    </symbol>
+    <symbol id="g-swap" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4 7h13M13 3l4 4-4 4M20 17H7M11 13l-4 4 4 4"/>
+    </symbol>
+  </defs>
+</svg>
+
 <header>
   <h1>TS<span>WA</span></h1>
   <div class="full">Tri-Scale Weather App</div>
@@ -114,67 +197,79 @@
 </header>
 
 <div class="page on" id="page-weather">
-<section class="card" id="weather">
-  <h2>Weather</h2>
   <div class="searchrow">
     <input id="q" type="search" placeholder="Search a place…" autocomplete="off">
     <button id="go">Go</button>
   </div>
   <div class="places" id="places"></div>
-  <div class="wxplace" id="wxplace">Adelaide, Australia</div>
-  <div class="wxcond" id="wxcond">Loading…</div>
-  <button class="bignum" id="wxnum" aria-label="Current temperature. Tap to step to the next temperature scale">–</button>
-  <div class="hint">Same scale as the converter, always. Tap to step it.</div>
-  <div class="wxgrid">
-    <div class="cell"><div class="v" id="wxfeels">–</div><div class="k">Feels like</div></div>
-    <div class="cell"><div class="v" id="wxhi">–</div><div class="k">High</div></div>
-    <div class="cell"><div class="v" id="wxlo">–</div><div class="k">Low</div></div>
+
+  <div class="hero">
+    <div class="place" id="wxplace">Adelaide, Australia</div>
+    <div class="cond" id="wxcond">Loading…</div>
+    <button class="heroTemp" id="wxnum" data-temp="" aria-label="Current temperature. Tap to step to the next temperature scale">–</button>
+    <div class="feels" id="wxfeels" data-temp="">Feels like –</div>
   </div>
+  <div class="hl" id="wxhl"></div>
+  <div class="hintline">Tap any temperature to switch °C / °F / K</div>
+
   <div class="hourly" id="hourly"></div>
-  <div class="status" id="wxstatus"></div>
-</section>
 
+  <section class="card" style="padding:6px 16px">
+    <div id="days"></div>
+  </section>
+
+  <div class="details" id="details"></div>
+
+  <div class="wxfoot" id="wxstatus">Weather: Open-Meteo (CC BY 4.0)</div>
 </div>
+
 <div class="page" id="page-converter">
-<section class="card" id="converter">
-  <h2>Temperature converter</h2>
-  <div class="pills" id="pills">
-    <span class="pill" data-u="0">°C</span><span class="pill" data-u="1">°F</span><span class="pill" data-u="2">K</span>
-  </div>
-  <button class="bignum" id="bignum" aria-label="Tap to step to the next temperature scale">22.0°</button>
-  <div class="hint">Tap the number to step °C → °F → K</div>
-  <div class="verdict"><div class="t" id="vtitle"></div><div class="d" id="vdesc"></div></div>
-  <div class="sliderwrap">
-    <div class="centre"></div>
-    <input type="range" id="jog" min="-50" max="50" step="1" value="0" aria-label="Slide to adjust the temperature; it springs back to the centre">
-  </div>
-  <div class="sliderlabels"><span>◀ slide: cooler</span><span>warmer ▶</span></div>
-  <div class="presets" id="presets"></div>
-</section>
+  <section class="card" id="converter">
+    <h2>Temperature converter</h2>
+    <div class="pills" id="pills">
+      <span class="pill" data-u="0">°C</span><span class="pill" data-u="1">°F</span><span class="pill" data-u="2">K</span>
+    </div>
+    <button class="bignum" id="bignum" aria-label="Tap to step to the next temperature scale">22.0°</button>
+    <div class="hint">Tap the number to step °C → °F → K</div>
+    <div class="verdict"><div class="t" id="vtitle"></div><div class="d" id="vdesc"></div></div>
+    <div class="sliderwrap">
+      <div class="centre"></div>
+      <input type="range" id="jog" min="-50" max="50" step="1" value="0" aria-label="Slide to adjust the temperature; it springs back to the centre">
+    </div>
+    <div class="sliderlabels"><span>◀ slide: cooler</span><span>warmer ▶</span></div>
+    <div class="presets" id="presets"></div>
+  </section>
 
-<section class="card">
-  <h2>Landmarks</h2>
-  <details>
-    <summary>Temperatures worth knowing</summary>
-    <table id="landmarks"></table>
-  </details>
-  <p class="status">F = C × 9/5 + 32 &nbsp;·&nbsp; K = C + 273.15 &nbsp;·&nbsp; Weather data: Open-Meteo (CC BY 4.0), stored as Celsius, converted only for display.</p>
-</section>
-
+  <section class="card">
+    <h2>Landmarks</h2>
+    <details>
+      <summary>Temperatures worth knowing</summary>
+      <table id="landmarks"></table>
+    </details>
+    <p class="hint" style="margin-top:10px">F = C × 9/5 + 32 &nbsp;·&nbsp; K = C + 273.15</p>
+  </section>
 </div>
+
 <footer>TSWA — Tri-Scale Weather App · GPL-3.0 · Made so Rob can tell family in the USA what the weather is in Adelaide.</footer>
+
+<nav class="tabbar">
+  <button id="tab-weather" class="on" data-page="page-weather"><svg><use href="#g-partly"/></svg>Weather</button>
+  <button id="tab-converter" data-page="page-converter"><svg><use href="#g-swap"/></svg>Converter</button>
+</nav>
 
 <script>
 "use strict";
 // ---------- state: Celsius is the only stored truth; convert at display ----------
+// Global state is shared by both pages on purpose: the scale chosen on one
+// page is the scale shown on the other. Switching pages resets nothing.
 const SCALES = [
-  { name: "Celsius",    sym: "°C", from: c => c,                 digits: 1 },
-  { name: "Fahrenheit", sym: "°F", from: c => c * 9 / 5 + 32,    digits: 1 },
-  { name: "Kelvin",     sym: "K",  from: c => c + 273.15,        digits: 1 }
+  { name: "Celsius",    sym: "°C", from: c => c,              digits: 1 },
+  { name: "Fahrenheit", sym: "°F", from: c => c * 9 / 5 + 32, digits: 1 },
+  { name: "Kelvin",     sym: "K",  from: c => c + 273.15,     digits: 1 }
 ];
-let unit = 0;                 // index into SCALES
-let tempC = 22;               // converter temperature, Celsius
-let wx = null;                // last weather payload (all Celsius)
+let unit = 0;
+let tempC = 22;
+let wx = null;
 
 const $ = id => document.getElementById(id);
 const fmt = (c, withSym = true) => {
@@ -183,7 +278,7 @@ const fmt = (c, withSym = true) => {
   return withSym ? v + s.sym : v;
 };
 
-// ---------- verdicts: funny, but factually grounded (mg #882 set) ----------
+// ---------- verdicts + landmarks (converter) ----------
 const VERDICTS = [
   [-273.15, "Absolute zero", "Nothing moves. Nothing can be colder; this is the floor of physics."],
   [-219,    "Oxygen liquefies", "Air itself turns to liquid down here. Not picnic weather."],
@@ -206,6 +301,21 @@ const VERDICTS = [
   [100,     "Hotter than any weather on Earth", "No place on Earth gets this hot. From here on, it is kitchens and physics."],
   [1e9,     "Oven territory", "Roasts, pizzas and burning paper live up here. Not weather any more."]
 ];
+const LANDMARKS = [
+  ["Absolute zero", -273.15, "Nothing moves. Nothing can be colder; this is the floor of physics."],
+  ["Oxygen liquefies", -218.8, "Air itself turns to liquid at this temperature."],
+  ["Liquid nitrogen boils", -195.8, "Liquid nitrogen boils here. Things dipped in it shatter like glass."],
+  ["Vostok record - coldest ever on Earth", -89.2, "Vostok, Antarctica, 1983: the coldest natural temperature ever measured."],
+  ["Dry ice sublimates", -78.5, "Solid carbon dioxide turns straight to gas. Spooky fog included."],
+  ["F/C crossover - Celsius equals Fahrenheit", -40, "The one temperature that reads the same on both scales."],
+  ["Freezing - water freezes", 0, "Water freezes at 0 C / 32 F. Exactly here."],
+  ["Body temp", 37, "37 C / 98.6 F: human body temperature. You, right now."],
+  ["Death Valley record - hottest ever on Earth", 56.7, "56.7 C / 134 F, Death Valley, 1913: the hottest ever reliably measured."],
+  ["Boiling - water boils", 100, "100 C / 212 F. Kettle's done."],
+  ["Oven temperature", 180, "A moderate oven. Cookies, not people."],
+  ["Paper burns", 232.78, "451 F, famously. Books and pizza crusts beware."],
+  ["Pizza oven", 260, "500 F territory. Ninety seconds to perfect leopard-spotting."]
+];
 function verdict(c) {
   for (const [label, lc, d] of LANDMARKS) if (Math.abs(c - lc) < 0.005) return { t: label, d };
   for (const [limit, t, d] of VERDICTS) if (c <= limit) return { t, d };
@@ -227,7 +337,6 @@ function renderConverter() {
 }
 function cycleUnit() { unit = (unit + 1) % SCALES.length; renderConverter(); renderWeather(); }
 $("bignum").addEventListener("click", cycleUnit);
-$("wxnum").addEventListener("click", cycleUnit);
 
 const jog = $("jog");
 let jogBase = null;
@@ -247,27 +356,9 @@ PRESETS.forEach(([label, c]) => {
   b.textContent = label; b.addEventListener("click", () => { tempC = c; renderConverter(); });
   $("presets").appendChild(b);
 });
-
-// landmarks table follows the current scale
-const LANDMARKS = [
-  ["Absolute zero", -273.15, "Nothing moves. Nothing can be colder; this is the floor of physics."],
-  ["Oxygen liquefies", -218.8, "Air itself turns to liquid at this temperature."],
-  ["Liquid nitrogen boils", -195.8, "Liquid nitrogen boils here. Things dipped in it shatter like glass."],
-  ["Vostok record - coldest ever on Earth", -89.2, "Vostok, Antarctica, 1983: the coldest natural temperature ever measured."],
-  ["Dry ice sublimates", -78.5, "Solid carbon dioxide turns straight to gas. Spooky fog included."],
-  ["F/C crossover - Celsius equals Fahrenheit", -40, "The one temperature that reads the same on both scales."],
-  ["Freezing - water freezes", 0, "Water freezes at 0 C / 32 F. Exactly here."],
-  ["Body temp", 37, "37 C / 98.6 F: human body temperature. You, right now."],
-  ["Death Valley record - hottest ever on Earth", 56.7, "56.7 C / 134 F, Death Valley, 1913: the hottest ever reliably measured."],
-  ["Boiling - water boils", 100, "100 C / 212 F. Kettle's done."],
-  ["Oven temperature", 180, "A moderate oven. Cookies, not people."],
-  ["Paper burns", 232.78, "451 F, famously. Books and pizza crusts beware."],
-  ["Pizza oven", 260, "500 F territory. Ninety seconds to perfect leopard-spotting."]
-];
 function renderLandmarks() {
   $("landmarks").innerHTML = LANDMARKS.map(([label, c]) =>
     "<tr><td>" + label + "</td><td>" + fmt(c) + "</td></tr>").join("");
-  // (landmark rows also carry a description, used by the exact-match verdict)
 }
 
 // ---------- weather (Open-Meteo, free, no key) ----------
@@ -276,6 +367,21 @@ const WMO = {0:"Clear sky",1:"Mainly clear",2:"Partly cloudy",3:"Overcast",45:"F
   66:"Freezing rain",67:"Freezing rain",71:"Light snow",73:"Snow",75:"Heavy snow",77:"Snow grains",
   80:"Light showers",81:"Showers",82:"Violent showers",85:"Snow showers",86:"Snow showers",
   95:"Thunderstorm",96:"Thunderstorm with hail",99:"Thunderstorm with hail"};
+function glyphFor(code, isDay) {
+  if (code === 0) return isDay ? ["g-sun", "sun"] : ["g-moon", "cloud"];
+  if (code === 1 || code === 2) return ["g-partly", "sun"];
+  if (code === 3) return ["g-cloud", "cloud"];
+  if (code === 45 || code === 48) return ["g-fog", "cloud"];
+  if (code >= 51 && code <= 55) return ["g-drizzle", "rain"];
+  if ((code >= 61 && code <= 67) || (code >= 80 && code <= 82)) return ["g-rain", "rain"];
+  if ((code >= 71 && code <= 77) || code === 85 || code === 86) return ["g-snow", "cloud"];
+  if (code >= 95) return ["g-thunder", "rain"];
+  return ["g-cloud", "cloud"];
+}
+const glyph = (code, isDay, cls) => {
+  const [id, tone] = glyphFor(code, isDay);
+  return "<svg class='glyph " + tone + (cls ? " " + cls : "") + "'><use href='#" + id + "'/></svg>";
+};
 const PLACES = [
   ["Adelaide", -34.9285, 138.6007, "Adelaide, Australia"],
   ["Somerton Park", -34.9803, 138.5124, "Somerton Park, Australia"],
@@ -291,39 +397,107 @@ PLACES.forEach(([label, la, lo, full]) => {
   $("places").appendChild(b);
 });
 
+let wxFetchedAt = null;
 async function loadWeather(lat, lon, label) {
-  $("wxstatus").textContent = "Fetching…";
   const url = "https://api.open-meteo.com/v1/forecast?latitude=" + lat + "&longitude=" + lon +
-    "&current=temperature_2m,apparent_temperature,weather_code" +
-    "&hourly=temperature_2m&daily=temperature_2m_max,temperature_2m_min&forecast_days=1&timezone=auto";
+    "&current=temperature_2m,apparent_temperature,relative_humidity_2m,dew_point_2m,pressure_msl,wind_speed_10m,wind_direction_10m,weather_code,is_day" +
+    "&hourly=temperature_2m,weather_code,precipitation_probability,visibility" +
+    "&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,uv_index_max,precipitation_probability_max" +
+    "&forecast_days=10&timezone=auto";
   try {
     const r = await fetch(url);
     if (!r.ok) throw new Error("HTTP " + r.status);
     wx = await r.json();
+    wxFetchedAt = new Date();
     $("wxplace").textContent = label;
-    localStorage.setItem("tswa-wx", JSON.stringify({ wx, label }));
-    $("wxstatus").textContent = "Updated just now · Open-Meteo";
+    try { localStorage.setItem("tswa-wx", JSON.stringify({ wx, label })); } catch (e) {}
+    $("wxstatus").textContent = "Weather: Open-Meteo (CC BY 4.0) · Updated " +
+      wxFetchedAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   } catch (e) {
-    $("wxstatus").textContent = "Could not fetch weather (offline?). Showing the last good data if any.";
+    $("wxstatus").textContent = "Weather: Open-Meteo (CC BY 4.0) · Last good data — offline";
   }
   renderWeather();
 }
+const COMPASS = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
+const uvWord = uv => uv < 3 ? "Low" : uv < 6 ? "Moderate" : uv < 8 ? "High" : uv < 11 ? "Very high" : "Extreme";
+const cell = (k, v, sub) =>
+  "<div class='cell'><div class='k'>" + k + "</div><div class='v'>" + v + "</div>" +
+  (sub ? "<div class='sub'>" + sub + "</div>" : "") + "</div>";
+
 function renderWeather() {
   renderLandmarks();
   if (!wx || !wx.current) return;
-  $("wxnum").textContent = fmt(wx.current.temperature_2m);
-  $("wxcond").textContent = WMO[wx.current.weather_code] || "—";
-  $("wxfeels").textContent = fmt(wx.current.apparent_temperature);
-  $("wxhi").textContent = fmt(wx.daily.temperature_2m_max[0]);
-  $("wxlo").textContent = fmt(wx.daily.temperature_2m_min[0]);
-  const times = wx.hourly.time, temps = wx.hourly.temperature_2m;
-  const nowH = new Date().getHours();
-  let html = "";
-  for (let i = nowH; i < Math.min(nowH + 8, times.length); i++) {
-    html += "<div class='h'><div class='k'>" + times[i].slice(11, 16) + "</div><div class='t'>" + fmt(temps[i]) + "</div></div>";
+  const cur = wx.current, dly = wx.daily;
+  // hero
+  $("wxnum").innerHTML = fmt(cur.temperature_2m, false) + "<span class='u'>" + SCALES[unit].sym + "</span>";
+  $("wxnum").dataset.temp = cur.temperature_2m;
+  $("wxcond").textContent = WMO[cur.weather_code] || "—";
+  $("wxfeels").textContent = "Feels like " + fmt(cur.apparent_temperature);
+  $("wxfeels").dataset.temp = cur.apparent_temperature;
+  // high / low (+ rain chance when notable)
+  const rainToday = (dly.precipitation_probability_max || [0])[0] || 0;
+  $("wxhl").innerHTML =
+    "<span data-temp='" + dly.temperature_2m_max[0] + "'>↑ " + fmt(dly.temperature_2m_max[0]) + "</span>" +
+    " &nbsp; <span class='lo' data-temp='" + dly.temperature_2m_min[0] + "'>↓ " + fmt(dly.temperature_2m_min[0]) + "</span>" +
+    (rainToday >= 20 ? " &nbsp; <span class='rain'>· " + rainToday + "% rain</span>" : "");
+  // hourly: slice from the current hour of the PLACE (match API timestamps, never the phone clock)
+  const h = wx.hourly;
+  const curHourPrefix = (cur.time || "").slice(0, 13);
+  let start = h.time.findIndex(t => t.slice(0, 13) === curHourPrefix);
+  if (start < 0) start = 0;
+  let hh = "";
+  for (let i = start; i < Math.min(start + 12, h.time.length); i++) {
+    const pp = (h.precipitation_probability || [])[i];
+    hh += "<div class='h" + (i === start ? " now" : "") + "'>" +
+      "<div class='k'>" + (i === start ? "Now" : h.time[i].slice(11, 16)) + "</div>" +
+      glyph(h.weather_code[i], i === start ? cur.is_day : 1) +
+      "<div class='t' data-temp='" + h.temperature_2m[i] + "'>" + fmt(h.temperature_2m[i]) + "</div>" +
+      "<div class='pp'>" + (pp ? pp + "%" : "") + "</div></div>";
   }
-  $("hourly").innerHTML = html;
+  $("hourly").innerHTML = hh;
+  // 10-day rows with range bars (geometry in Celsius; scale-invariant)
+  const los = dly.temperature_2m_min, his = dly.temperature_2m_max;
+  const wMin = Math.min(...los), wMax = Math.max(...his), span = Math.max(1, wMax - wMin);
+  let dd = "";
+  for (let i = 0; i < los.length; i++) {
+    const date = dly.time[i];
+    const dayName = i === 0 ? "Today" :
+      new Date(+date.slice(0, 4), +date.slice(5, 7) - 1, +date.slice(8, 10))
+        .toLocaleDateString([], { weekday: "short" });
+    const pp = (dly.precipitation_probability_max || [])[i];
+    const left = ((los[i] - wMin) / span * 100).toFixed(1);
+    const width = Math.max(4, (his[i] - los[i]) / span * 100).toFixed(1);
+    dd += "<div class='day'><div class='d'>" + dayName + "</div>" +
+      glyph(dly.weather_code[i], 1) +
+      "<div class='pp'>" + (pp ? pp + "%" : "") + "</div>" +
+      "<div class='lo' data-temp='" + los[i] + "'>" + fmt(los[i]) + "</div>" +
+      "<div class='rangebar'><div class='fill' style='left:" + left + "%;width:" + width + "%'></div></div>" +
+      "<div class='hi' data-temp='" + his[i] + "'>" + fmt(his[i]) + "</div></div>";
+  }
+  $("days").innerHTML = dd;
+  // details grid: metric primary, US equivalent as the quiet sub-line
+  const windDir = COMPASS[Math.round((cur.wind_direction_10m || 0) / 45) % 8];
+  const visKm = ((h.visibility || [])[start] || 0) / 1000;
+  $("details").innerHTML =
+    cell("Wind", Math.round(cur.wind_speed_10m) + " km/h " + windDir,
+         (cur.wind_speed_10m * 0.621).toFixed(0) + " mph") +
+    cell("Precipitation", rainToday + "%", "chance today") +
+    cell("Humidity", Math.round(cur.relative_humidity_2m) + "%", "") +
+    "<div class='cell'><div class='k'>Dew point</div><div class='v' data-temp='" + cur.dew_point_2m + "'>" +
+      fmt(cur.dew_point_2m) + "</div></div>" +
+    cell("UV index", Math.round(dly.uv_index_max[0]), uvWord(dly.uv_index_max[0])) +
+    cell("Visibility", visKm.toFixed(0) + " km", (visKm * 0.621).toFixed(0) + " miles") +
+    cell("Pressure", Math.round(cur.pressure_msl) + " hPa", (cur.pressure_msl * 0.02953).toFixed(2) + " inHg") +
+    "<div class='cell wide'>" +
+      "<div class='half'><div class='k'>Sunrise</div><div class='v'>" + dly.sunrise[0].slice(11, 16) + "</div></div>" +
+      "<div class='half'><div class='k'>Sunset</div><div class='v'>" + dly.sunset[0].slice(11, 16) + "</div></div>" +
+    "</div>";
 }
+// One delegated handler: ANY temperature on the weather page steps the scale.
+document.addEventListener("click", e => {
+  const el = e.target.closest("[data-temp]");
+  if (el && el.dataset.temp !== "") cycleUnit();
+});
 async function searchPlace() {
   const q = $("q").value.trim();
   if (!q) return;
@@ -339,6 +513,23 @@ async function searchPlace() {
 $("go").addEventListener("click", searchPlace);
 $("q").addEventListener("keydown", e => { if (e.key === "Enter") searchPlace(); });
 
+// ---------- two pages: read-only Weather | interactive Converter ----------
+const scrollMem = {};
+function showPage(id) {
+  const cur = document.querySelector(".page.on");
+  if (cur) scrollMem[cur.id] = window.scrollY;
+  document.querySelectorAll(".page").forEach(pg => pg.classList.toggle("on", pg.id === id));
+  document.querySelectorAll(".tabbar button").forEach(b => b.classList.toggle("on", b.dataset.page === id));
+  try { localStorage.setItem("tswa-page", id); } catch (e) {}
+  window.scrollTo(0, scrollMem[id] || 0);
+}
+document.querySelectorAll(".tabbar button").forEach(b =>
+  b.addEventListener("click", () => showPage(b.dataset.page)));
+try {
+  const last = localStorage.getItem("tswa-page");
+  if (last && document.getElementById(last)) showPage(last);
+} catch (e) {}
+
 // restore last good weather, then refresh Adelaide by default
 try {
   const saved = JSON.parse(localStorage.getItem("tswa-wx") || "null");
@@ -347,23 +538,6 @@ try {
 renderConverter();
 renderWeather();
 loadWeather(-34.9285, 138.6007, "Adelaide, Australia");
-// ---------- two pages: read-only Weather | interactive Converter ----------
-function showPage(id) {
-  document.querySelectorAll(".page").forEach(pg => pg.classList.toggle("on", pg.id === id));
-  document.querySelectorAll(".tabbar button").forEach(b => b.classList.toggle("on", b.dataset.page === id));
-  try { localStorage.setItem("tswa-page", id); } catch (e) {}
-  window.scrollTo(0, 0);
-}
-document.querySelectorAll(".tabbar button").forEach(b =>
-  b.addEventListener("click", () => showPage(b.dataset.page)));
-try {
-  const last = localStorage.getItem("tswa-page");
-  if (last && document.getElementById(last)) showPage(last);
-} catch (e) {}
 </script>
-<nav class="tabbar">
-  <button id="tab-weather" class="on" data-page="page-weather">Weather</button>
-  <button id="tab-converter" data-page="page-converter">Converter</button>
-</nav>
 </body>
 </html>
