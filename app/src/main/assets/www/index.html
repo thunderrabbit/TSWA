@@ -168,15 +168,15 @@ const fmt = (c, withSym = true) => {
 // ---------- verdicts: funny, but factually grounded (mg #882 set) ----------
 const VERDICTS = [
   [-273.15, "Absolute zero", "Nothing moves. Nothing can be colder; this is the floor of physics."],
-  [-219,    "Oxygen liquefies", "Colder than the coldest place in the solar system's plans for your picnic."],
+  [-219,    "Oxygen liquefies", "Air itself turns to liquid down here. Not picnic weather."],
   [-196,    "Liquid nitrogen boils", "It boils at this temperature. Your drink would shatter, not freeze."],
-  [-138.8,  "Colder than anywhere on Earth, ever", "Below −138.8 °F territory — no weather station has ever recorded this."],
-  [-89.2,   "Vostok, Antarctica, 1983", "−89.2 °C: the coldest natural temperature ever measured on Earth."],
+  [-138.8,  "Colder than anywhere on Earth, ever", "No weather station on Earth has ever recorded anything close to this."],
+  [-89.2,   "Vostok, Antarctica, 1983", "The coldest natural temperature ever measured on Earth."],
   [-78.5,   "Dry ice sublimates", "Solid carbon dioxide turns straight to gas here. Spooky fog included."],
-  [-40,     "The crossover point", "−40 is the one temperature that is the same in Celsius and Fahrenheit."],
+  [-40,     "The crossover point", "-40 is the one temperature that is the same in Celsius and Fahrenheit."],
   [-39.9,   "Dangerously cold", "Exposed skin can freeze in minutes. Stay inside."],
   [-0.1,    "Below freezing", "Water is ice, roads are treacherous, pipes are nervous."],
-  [0,       "Freezing point", "Water freezes at 0 °C / 32 °F. Exactly here."],
+  [0,       "Freezing point", "Water freezes at 0 C / 32 F. Exactly here."],
   [8,       "Cold", "Proper coat weather."],
   [15,      "Cool", "A jumper, maybe. Light jacket, definitely."],
   [22,      "Mild", "Perfectly pleasant nothing-to-complain-about weather."],
@@ -184,14 +184,12 @@ const VERDICTS = [
   [32,      "Warm", "Shorts weather for most humans."],
   [38,      "Hot", "Seek shade, drink water, slow down."],
   [45,      "Very hot", "Dangerous for exertion. Adelaide knows this one well."],
-  [56.7,    "Extreme heat", "Approaching the hottest ever reliably measured on Earth."],
-  [100,     "Death Valley record heat", "56.7 °C / 134 °F, Death Valley, 1913. Beyond this: no weather, only ovens."],
-  [180,     "Water boils", "100 °C / 212 °F. Kettle's done."],
-  [232,     "Oven temperature", "A moderate oven. Cookies, not people."],
-  [260,     "Paper burns", "451 °F, famously. Books and pizza crusts beware."],
-  [1e9,     "Pizza oven", "500 °F territory. Ninety seconds to perfect leopard-spotting."]
+  [56.7,    "Extreme heat", "Approaching the hottest ever measured on Earth: 56.7 C / 134 F, Death Valley, 1913."],
+  [100,     "Hotter than any weather on Earth", "No place on Earth gets this hot. From here on, it is kitchens and physics."],
+  [1e9,     "Oven territory", "Roasts, pizzas and burning paper live up here. Not weather any more."]
 ];
 function verdict(c) {
+  for (const [label, lc, d] of LANDMARKS) if (Math.abs(c - lc) < 0.005) return { t: label, d };
   for (const [limit, t, d] of VERDICTS) if (c <= limit) return { t, d };
   return VERDICTS[VERDICTS.length - 1];
 }
@@ -234,15 +232,24 @@ PRESETS.forEach(([label, c]) => {
 
 // landmarks table follows the current scale
 const LANDMARKS = [
-  ["Absolute zero", -273.15], ["Oxygen liquefies", -218.8], ["Liquid nitrogen boils", -195.8],
-  ["Coldest ever on Earth (Vostok 1983)", -89.2], ["Dry ice sublimates", -78.5],
-  ["Celsius = Fahrenheit", -40], ["Water freezes", 0], ["Human body", 37],
-  ["Hottest ever on Earth (Death Valley 1913)", 56.7], ["Water boils", 100],
-  ["Moderate oven", 180], ["Paper burns", 232], ["Pizza oven", 260]
+  ["Absolute zero", -273.15, "Nothing moves. Nothing can be colder; this is the floor of physics."],
+  ["Oxygen liquefies", -218.8, "Air itself turns to liquid at this temperature."],
+  ["Liquid nitrogen boils", -195.8, "Liquid nitrogen boils here. Things dipped in it shatter like glass."],
+  ["Vostok record - coldest ever on Earth", -89.2, "Vostok, Antarctica, 1983: the coldest natural temperature ever measured."],
+  ["Dry ice sublimates", -78.5, "Solid carbon dioxide turns straight to gas. Spooky fog included."],
+  ["-40 crossover - Celsius equals Fahrenheit", -40, "The one temperature that reads the same on both scales."],
+  ["Freezing - water freezes", 0, "Water freezes at 0 C / 32 F. Exactly here."],
+  ["Body temp", 37, "37 C / 98.6 F: human body temperature. You, right now."],
+  ["Death Valley record - hottest ever on Earth", 56.7, "56.7 C / 134 F, Death Valley, 1913: the hottest ever reliably measured."],
+  ["Boiling - water boils", 100, "100 C / 212 F. Kettle's done."],
+  ["Oven temperature", 180, "A moderate oven. Cookies, not people."],
+  ["Paper burns", 232, "451 F, famously. Books and pizza crusts beware."],
+  ["Pizza oven", 260, "500 F territory. Ninety seconds to perfect leopard-spotting."]
 ];
 function renderLandmarks() {
   $("landmarks").innerHTML = LANDMARKS.map(([label, c]) =>
     "<tr><td>" + label + "</td><td>" + fmt(c) + "</td></tr>").join("");
+  // (landmark rows also carry a description, used by the exact-match verdict)
 }
 
 // ---------- weather (Open-Meteo, free, no key) ----------
