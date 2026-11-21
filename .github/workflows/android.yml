@@ -55,6 +55,15 @@ jobs:
         run: |
           echo "$KEYSTORE_BASE64" | base64 --decode > "$RUNNER_TEMP/tswa-release.jks"
 
+      - name: Verify release keystore opens
+        if: ${{ env.HAS_KEYSTORE == 'true' }}
+        env:
+          TSWA_KEYSTORE_PASSWORD: ${{ secrets.TSWA_KEYSTORE_PASSWORD }}
+          TSWA_KEY_ALIAS: ${{ secrets.TSWA_KEY_ALIAS }}
+        run: |
+          keytool -list -keystore "$RUNNER_TEMP/tswa-release.jks" \
+            -storepass "$TSWA_KEYSTORE_PASSWORD" -alias "$TSWA_KEY_ALIAS"
+
       - name: Build signed release APK
         if: ${{ env.HAS_KEYSTORE == 'true' }}
         env:
