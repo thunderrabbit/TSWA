@@ -53,6 +53,31 @@
   .setrow .sym { color: var(--muted); }
   .setrow input { width: 26px; height: 26px; accent-color: var(--accent); flex: 0 0 auto; }
   .setrow input:disabled { opacity: 0.35; }
+  /* ---------- settings: saved places ---------- */
+  .saveplace {
+    display: block; width: 100%; background: none; cursor: pointer;
+    border: 1.5px dashed var(--accent); color: var(--accent);
+    border-radius: 12px; padding: 12px; font-size: 15px; font-weight: 600;
+    margin-bottom: 14px;
+  }
+  .saveplace:disabled { border-color: var(--line); color: var(--muted); cursor: default; }
+  .saverow { position: relative; overflow: hidden; border-bottom: 1px solid var(--line); }
+  .saverow:last-child { border-bottom: none; }
+  .saverow .rowbg {
+    position: absolute; inset: 0; background: #a33327; color: #fff;
+    display: flex; align-items: center; padding-left: 14px;
+    font-weight: 600; font-size: 14px;
+  }
+  .saverow .rowfg {
+    position: relative; display: flex; align-items: center; gap: 10px;
+    background: var(--card); padding: 10px 0; touch-action: pan-y;
+  }
+  .saverow .drag {
+    color: var(--muted); font-size: 18px; padding: 4px 2px;
+    cursor: grab; touch-action: none; flex: 0 0 auto;
+  }
+  .saverow .sname { flex: 1; font-size: 16px; min-width: 0; overflow-wrap: break-word; }
+  .saverow .ssub { display: block; color: var(--muted); font-size: 12.5px; }
   /* ---------- converter ---------- */
   .pills { display: flex; gap: 8px; justify-content: center; margin-bottom: 6px; }
   .pill {
@@ -216,6 +241,7 @@
     <button id="go">Go</button>
   </div>
   <div class="places" id="places"></div>
+  <div class="hintline" id="placeshint" style="display:none">Save the places you care about in Settings.</div>
 
   <div class="hero">
     <div class="place" id="wxplace">Adelaide, Australia</div>
@@ -241,7 +267,7 @@
   <section class="card" id="converter">
     <h2>Temperature converter</h2>
     <div class="pills" id="pills"></div>
-    <button class="bignum" id="bignum" aria-label="Tap to step to the next temperature scale">22.0°</button>
+    <button class="bignum" id="bignum" aria-label="Tap to step to the next temperature scale">22.2°</button>
     <div class="hint" id="convhint"></div>
     <div class="verdict"><div class="t" id="vtitle"></div><div class="d" id="vdesc"></div></div>
     <div class="sliderwrap">
@@ -267,6 +293,15 @@
     <h2>Scales</h2>
     <div id="scaleSettings"></div>
     <p class="hint" style="margin-top:10px">Tap the big number to step through the scales that are on. At least one scale must stay on.</p>
+  </section>
+
+  <button class="saveplace" id="savePlace" style="display:none"></button>
+
+  <section class="card">
+    <h2>Saved places</h2>
+    <div id="savedList"></div>
+    <p class="hint" id="savedEmpty">No saved places yet. View a place on the Weather page, then save it with the button above.</p>
+    <p class="hint" style="margin-top:6px">Drag the handle to sort · swipe a place right to delete it. Deleting every place starts onboarding again.</p>
   </section>
 </div>
 
@@ -307,7 +342,13 @@ function saveScales() {
 }
 let unit = 0;
 if (!enabled[SCALES[unit].key]) unit = firstEnabledIndex();
-let tempC = 22;
+// The converter starts from the Weather page's temperature (Rob,
+// 2026-11-23); 22.2 C is the default when there is no weather to
+// work with. Values are Celsius here; the display converts.
+let tempC = 22.2;
+// True once the user sets the converter by hand (slider or preset);
+// from then on the weather no longer reseeds it.
+let convTouched = false;
 let wx = null;
 
 const $ = id => document.getElementById(id);
@@ -406,6 +447,7 @@ const jog = $("jog");
 let jogBase = null;
 jog.addEventListener("pointerdown", () => { jogBase = tempC; });
 jog.addEventListener("input", () => {
+  convTouched = true;
   if (jogBase === null) jogBase = tempC;
   tempC = Math.max(-273.15, +(jogBase + Number(jog.value) * 0.2).toFixed(2));
   renderConverter();
@@ -417,7 +459,7 @@ jog.addEventListener("blur", springBack);
 
 PRESETS.forEach(([label, c]) => {
   const b = document.createElement("button");
-  b.textContent = label; b.addEventListener("click", () => { tempC = c; renderConverter(); });
+  b.textContent = label; b.addEventListener("click", () => { convTouched = true; tempC = c; renderConverter(); });
   $("presets").appendChild(b);
 });
 function renderLandmarks() {
@@ -454,6 +496,137 @@ function setScaleEnabled(i, on) {
   renderSettings(); renderConverter(); renderWeather();
 }
 
+// ---------- settings: saved places ----------
+// The button sits below the scale selector, above the Saved places
+// label, as Rob laid it out (2026-11-23). Saving puts the place on
+// TOP of the list; the Weather page slider shows the same order.
+function renderSaveButton() {
+  const b = $("savePlace");
+  if (!curPlace) { b.style.display = "none"; return; }
+  b.style.display = "";
+  if (isSaved(curPlace)) {
+    b.disabled = true;
+    b.textContent = "✓ Saved — " + curPlace.label;
+  } else {
+    b.disabled = false;
+    b.textContent = "+ Save current place (" + curPlace.label + ")";
+  }
+}
+$("savePlace").addEventListener("click", () => {
+  if (!curPlace || isSaved(curPlace)) return;
+  savedPlaces.unshift({ label: curPlace.label, lat: curPlace.lat, lon: curPlace.lon, full: curPlace.full });
+  persistPlaces();
+  renderPlaces(); renderSavedList(); renderSaveButton();
+});
+function removePlace(i) {
+  savedPlaces.splice(i, 1);
+  persistPlaces();
+  // An empty list is the first-run state again, so emptying it also
+  // clears the onboarded flag: the next launch asks about location
+  // once more. That is Rob's way back into onboarding (2026-11-23).
+  if (!savedPlaces.length) {
+    try { localStorage.removeItem("tswa-onboarded"); } catch { /* storage unavailable: onboarding just won't reset */ }
+  }
+  renderPlaces(); renderSavedList(); renderSaveButton();
+}
+function renderSavedList() {
+  const list = $("savedList");
+  list.innerHTML = "";
+  $("savedEmpty").style.display = savedPlaces.length ? "none" : "";
+  savedPlaces.forEach((p, i) => {
+    const row = document.createElement("div");
+    row.className = "saverow";
+    row.dataset.i = i;
+    const bg = document.createElement("div");
+    bg.className = "rowbg";
+    bg.textContent = "Delete";
+    const fg = document.createElement("div");
+    fg.className = "rowfg";
+    const handle = document.createElement("span");
+    handle.className = "drag";
+    handle.textContent = "⠿";
+    handle.setAttribute("aria-label", "Drag to sort");
+    const name = document.createElement("span");
+    name.className = "sname";
+    name.textContent = p.label;
+    if (p.full && p.full !== p.label) {
+      const sub = document.createElement("span");
+      sub.className = "ssub";
+      sub.textContent = p.full;
+      name.appendChild(sub);
+    }
+    fg.appendChild(handle);
+    fg.appendChild(name);
+    row.appendChild(bg);
+    row.appendChild(fg);
+    list.appendChild(row);
+    attachDrag(handle, row);
+    attachSwipe(fg, row);
+  });
+}
+// Sorting: drag the handle and the row follows the finger; the
+// stored order is rewritten from the DOM order on release. Indices
+// exist only in the data; the user never sees a number (Rob).
+function attachDrag(handle, row) {
+  handle.addEventListener("pointerdown", e => {
+    e.preventDefault();
+    const list = $("savedList");
+    const rowH = row.offsetHeight || 1;
+    const start = [...list.children].indexOf(row);
+    const startY = e.clientY;
+    row.style.zIndex = "2";
+    handle.setPointerCapture(e.pointerId);
+    const move = ev => {
+      const dy = ev.clientY - startY;
+      row.style.transform = "translateY(" + dy + "px)";
+      const target = Math.max(0, Math.min(savedPlaces.length - 1, start + Math.round(dy / rowH)));
+      const now = [...list.children].indexOf(row);
+      if (target !== now) {
+        const ref = list.children[target];
+        if (target > now) ref.after(row); else ref.before(row);
+      }
+    };
+    const up = () => {
+      handle.removeEventListener("pointermove", move);
+      handle.removeEventListener("pointerup", up);
+      handle.removeEventListener("pointercancel", up);
+      row.style.transform = "";
+      row.style.zIndex = "";
+      savedPlaces = [...list.children].map(r => savedPlaces[+r.dataset.i]);
+      persistPlaces();
+      renderSavedList(); renderPlaces();
+    };
+    handle.addEventListener("pointermove", move);
+    handle.addEventListener("pointerup", up);
+    handle.addEventListener("pointercancel", up);
+  });
+}
+// Deleting: swipe a row right, past the threshold, and it is gone.
+function attachSwipe(fg, row) {
+  fg.addEventListener("pointerdown", e => {
+    if (e.target.closest(".drag")) return; // the handle sorts; it does not swipe
+    const startX = e.clientX, startY = e.clientY;
+    let dx = 0, active = false;
+    fg.setPointerCapture(e.pointerId);
+    const move = ev => {
+      dx = ev.clientX - startX;
+      const dy = ev.clientY - startY;
+      if (!active && dx > 8 && Math.abs(dx) > Math.abs(dy)) active = true;
+      if (active) fg.style.transform = "translateX(" + Math.max(0, dx) + "px)";
+    };
+    const up = () => {
+      fg.removeEventListener("pointermove", move);
+      fg.removeEventListener("pointerup", up);
+      fg.removeEventListener("pointercancel", up);
+      fg.style.transform = "";
+      if (active && dx > 90) removePlace(+row.dataset.i);
+    };
+    fg.addEventListener("pointermove", move);
+    fg.addEventListener("pointerup", up);
+    fg.addEventListener("pointercancel", up);
+  });
+}
+
 // ---------- weather (Open-Meteo, free, no key) ----------
 const WMO = {0:"Clear sky",1:"Mainly clear",2:"Partly cloudy",3:"Overcast",45:"Fog",48:"Rime fog",
   51:"Light drizzle",53:"Drizzle",55:"Dense drizzle",61:"Light rain",63:"Rain",65:"Heavy rain",
@@ -475,23 +648,42 @@ const glyph = (code, isDay, cls) => {
   const [id, tone] = glyphFor(code, isDay);
   return "<svg class='glyph " + tone + (cls ? " " + cls : "") + "'><use href='#" + id + "'/></svg>";
 };
-const PLACES = [
-  ["Adelaide", -34.9285, 138.6007, "Adelaide, Australia"],
-  ["Somerton Park", -34.9803, 138.5124, "Somerton Park, Australia"],
-  ["Tokyo", 35.6762, 139.6503, "Tokyo, Japan"],
-  ["London", 51.5074, -0.1278, "London, UK"],
-  ["New York", 40.7128, -74.006, "New York, USA"],
-  ["Sydney", -33.8688, 151.2093, "Sydney, Australia"]
-];
-PLACES.forEach(([label, la, lo, full]) => {
-  const b = document.createElement("button");
-  b.textContent = label;
-  b.addEventListener("click", () => loadWeather(la, lo, full));
-  $("places").appendChild(b);
-});
+// ---------- saved places (mg #883, Rob's redesign) ----------
+// One list, two views: Settings manages it, and the Weather page's
+// slider below the search field mirrors it. Stored order is display
+// order; a new save goes on top. First run: the list is empty.
+let savedPlaces = [];
+try {
+  const stored = JSON.parse(localStorage.getItem("tswa-places") || "null");
+  if (Array.isArray(stored)) savedPlaces = stored.filter(p =>
+    p && typeof p.label === "string" && isFinite(p.lat) && isFinite(p.lon));
+} catch { /* stored places unreadable: start with an empty list */ }
+function persistPlaces() {
+  try { localStorage.setItem("tswa-places", JSON.stringify(savedPlaces)); } catch { /* storage unavailable: places just won't persist */ }
+}
+const samePlace = (a, b) =>
+  Math.abs(a.lat - b.lat) < 0.001 && Math.abs(a.lon - b.lon) < 0.001;
+const isSaved = p => !!p && savedPlaces.some(s => samePlace(s, p));
+// The place on the Weather page now, in saveable form; null until a
+// place is on screen. Set by loadWeather before it fetches, so the
+// place can be saved even while its weather is still loading.
+let curPlace = null;
+function renderPlaces() {
+  // The slider mirrors the saved list exactly (Rob, 2026-11-23).
+  $("places").innerHTML = "";
+  for (const p of savedPlaces) {
+    const b = document.createElement("button");
+    b.textContent = p.label;
+    if (curPlace && samePlace(p, curPlace)) b.style.borderColor = "var(--accent)";
+    b.addEventListener("click", () => loadWeather(p.lat, p.lon, p.full, p.label));
+    $("places").appendChild(b);
+  }
+  $("placeshint").style.display = savedPlaces.length ? "none" : "";
+}
 
 let wxFetchedAt = null;
-async function loadWeather(lat, lon, label) {
+async function loadWeather(lat, lon, label, short) {
+  curPlace = { label: short || label, lat, lon, full: label };
   const url = "https://api.open-meteo.com/v1/forecast?latitude=" + lat + "&longitude=" + lon +
     "&current=temperature_2m,apparent_temperature,relative_humidity_2m,dew_point_2m,pressure_msl,wind_speed_10m,wind_direction_10m,weather_code,is_day" +
     "&hourly=temperature_2m,weather_code,precipitation_probability,visibility" +
@@ -503,13 +695,15 @@ async function loadWeather(lat, lon, label) {
     wx = await r.json();
     wxFetchedAt = new Date();
     $("wxplace").textContent = label;
-    try { localStorage.setItem("tswa-wx", JSON.stringify({ wx, label })); } catch { /* storage unavailable: skip caching */ }
+    try { localStorage.setItem("tswa-wx", JSON.stringify({ wx, label, lat, lon })); } catch { /* storage unavailable: skip caching */ }
     $("wxstatus").textContent = "Weather: Open-Meteo (CC BY 4.0) · Updated " +
       wxFetchedAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
   } catch {
     $("wxstatus").textContent = "Weather: Open-Meteo (CC BY 4.0) · Last good data — offline";
   }
   renderWeather();
+  renderPlaces();
+  renderSaveButton();
 }
 const COMPASS = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
 const uvWord = uv => uv < 3 ? "Low" : uv < 6 ? "Moderate" : uv < 8 ? "High" : uv < 11 ? "Very high" : "Extreme";
@@ -520,6 +714,9 @@ const cell = (k, v, sub) =>
 function renderWeather() {
   renderLandmarks();
   if (!wx || !wx.current) return;
+  // Until the user drives the converter themselves, it starts from
+  // the temperature on this page.
+  if (!convTouched) { tempC = wx.current.temperature_2m; renderConverter(); }
   const cur = wx.current, dly = wx.daily;
   // hero
   $("wxnum").innerHTML = fmt(cur.temperature_2m, false) + "<span class='u'>" + SCALES[unit].sym + "</span>";
@@ -600,7 +797,7 @@ async function searchPlace() {
     const j = await r.json();
     if (!j.results || !j.results.length) { $("wxstatus").textContent = "No place found for “" + q + "”."; return; }
     const p = j.results[0];
-    loadWeather(p.latitude, p.longitude, p.name + ", " + (p.country || ""));
+    loadWeather(p.latitude, p.longitude, p.name + ", " + (p.country || ""), p.name);
   } catch { $("wxstatus").textContent = "Search failed (offline?)."; }
 }
 $("go").addEventListener("click", searchPlace);
@@ -626,12 +823,50 @@ try {
 // restore last good weather, then refresh Adelaide by default
 try {
   const saved = JSON.parse(localStorage.getItem("tswa-wx") || "null");
-  if (saved) { wx = saved.wx; $("wxplace").textContent = saved.label; }
+  if (saved) {
+    wx = saved.wx;
+    $("wxplace").textContent = saved.label;
+    if (isFinite(saved.lat) && isFinite(saved.lon))
+      curPlace = { label: saved.label, lat: saved.lat, lon: saved.lon, full: saved.label };
+  }
 } catch { /* stored weather unreadable: start fresh */ }
 renderConverter();
 renderWeather();
 renderSettings();
-loadWeather(-34.9285, 138.6007, "Adelaide, Australia");
+renderPlaces();
+renderSavedList();
+renderSaveButton();
+// Onboarding (mg #883, Rob 2026-11-23): the first run asks "allow
+// using your location?" through the system prompt. Yes: the current
+// location becomes the displayed place but is NOT saved, so the
+// list stays empty. No, or any failure: the Adelaide default, and
+// the search field is right there. Deleting every saved place in
+// Settings clears the flag, so onboarding can be re-run by hand.
+let onboarded = true;
+try { onboarded = !!localStorage.getItem("tswa-onboarded"); } catch { /* storage unavailable: skip onboarding rather than ask on every run */ }
+if (onboarded) {
+  loadWeather(-34.9285, 138.6007, "Adelaide, Australia", "Adelaide");
+} else {
+  try { localStorage.setItem("tswa-onboarded", "1"); } catch { /* storage unavailable: the ask just won't be remembered */ }
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(async pos => {
+      await loadWeather(pos.coords.latitude, pos.coords.longitude, "Your location", "Your location");
+      // Name the place from the forecast's timezone, as the website
+      // demo does: "Australia/Adelaide" becomes Adelaide.
+      const town = ((wx && wx.timezone) || "").split("/").pop().replace(/_/g, " ");
+      if (town) {
+        const full = "Your location near " + town;
+        $("wxplace").textContent = full;
+        curPlace = { label: town, lat: pos.coords.latitude, lon: pos.coords.longitude, full };
+        renderPlaces();
+        renderSaveButton();
+      }
+    }, () => loadWeather(-34.9285, 138.6007, "Adelaide, Australia", "Adelaide"),
+    { timeout: 10000, maximumAge: 600000 });
+  } else {
+    loadWeather(-34.9285, 138.6007, "Adelaide, Australia", "Adelaide");
+  }
+}
 </script>
 </body>
 </html>
