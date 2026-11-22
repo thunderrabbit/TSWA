@@ -14,6 +14,9 @@ import android.webkit.WebViewClient
 // is the exact interaction Rob approved (tap the number to step the scale,
 // centre-pinned slider below it), and this shell just makes it an app.
 class MainActivity : Activity() {
+    private companion object {
+        const val LOCATION_REQUEST_CODE = 42
+    }
 
     private lateinit var webView: WebView
 
@@ -30,24 +33,27 @@ class MainActivity : Activity() {
             useWideViewPort = true
         }
         webView.webViewClient = WebViewClient()
-        webView.webChromeClient = object : WebChromeClient() {
-            override fun onGeolocationPermissionsShowPrompt(
-                origin: String?,
-                callback: GeolocationPermissions.Callback?
-            ) {
-                val granted = checkSelfPermission(
-                    Manifest.permission.ACCESS_COARSE_LOCATION
-                ) == PackageManager.PERMISSION_GRANTED
-                if (granted) {
-                    callback?.invoke(origin, true, false)
-                } else {
-                    requestPermissions(
-                        arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION), 42
-                    )
-                    callback?.invoke(origin, false, false)
+        webView.webChromeClient =
+            object : WebChromeClient() {
+                override fun onGeolocationPermissionsShowPrompt(
+                    origin: String?,
+                    callback: GeolocationPermissions.Callback?,
+                ) {
+                    val granted =
+                        checkSelfPermission(
+                            Manifest.permission.ACCESS_COARSE_LOCATION,
+                        ) == PackageManager.PERMISSION_GRANTED
+                    if (granted) {
+                        callback?.invoke(origin, true, false)
+                    } else {
+                        requestPermissions(
+                            arrayOf(Manifest.permission.ACCESS_COARSE_LOCATION),
+                            LOCATION_REQUEST_CODE,
+                        )
+                        callback?.invoke(origin, false, false)
+                    }
                 }
             }
-        }
         webView.loadUrl("file:///android_asset/www/index.html")
     }
 
