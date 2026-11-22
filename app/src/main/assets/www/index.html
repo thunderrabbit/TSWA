@@ -567,6 +567,10 @@ function renderSavedList() {
 // Sorting: drag the handle and the row follows the finger; the
 // stored order is rewritten from the DOM order on release. Indices
 // exist only in the data; the user never sees a number (Rob).
+// The transform subtracts the slots the row has already swapped
+// through, so a DOM move never adds its own height to the finger's
+// travel — without that, every swap made the row leap a full row
+// and snap back (Rob's phone, 2026-11-23: "janky").
 function attachDrag(handle, row) {
   handle.addEventListener("pointerdown", e => {
     e.preventDefault();
@@ -574,17 +578,20 @@ function attachDrag(handle, row) {
     const rowH = row.offsetHeight || 1;
     const start = [...list.children].indexOf(row);
     const startY = e.clientY;
+    let cur = start;
+    row.style.position = "relative";
     row.style.zIndex = "2";
+    row.style.boxShadow = "0 6px 18px rgba(0,0,0,.45)";
     handle.setPointerCapture(e.pointerId);
     const move = ev => {
       const dy = ev.clientY - startY;
-      row.style.transform = "translateY(" + dy + "px)";
       const target = Math.max(0, Math.min(savedPlaces.length - 1, start + Math.round(dy / rowH)));
-      const now = [...list.children].indexOf(row);
-      if (target !== now) {
+      if (target !== cur) {
         const ref = list.children[target];
-        if (target > now) ref.after(row); else ref.before(row);
+        if (target > cur) ref.after(row); else ref.before(row);
+        cur = target;
       }
+      row.style.transform = "translateY(" + (dy - (cur - start) * rowH) + "px)";
     };
     const up = () => {
       handle.removeEventListener("pointermove", move);
@@ -592,6 +599,8 @@ function attachDrag(handle, row) {
       handle.removeEventListener("pointercancel", up);
       row.style.transform = "";
       row.style.zIndex = "";
+      row.style.position = "";
+      row.style.boxShadow = "";
       savedPlaces = [...list.children].map(r => savedPlaces[+r.dataset.i]);
       persistPlaces();
       renderSavedList(); renderPlaces();
