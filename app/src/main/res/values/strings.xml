@@ -1,4 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Two Skies</string>
+    <string name="full_name">Two Skies Weather App</string>
+    <string name="tab_weather">Weather</string>
+    <string name="tab_converter">Converter</string>
+    <string name="tab_settings">Settings</string>
 </resources>
