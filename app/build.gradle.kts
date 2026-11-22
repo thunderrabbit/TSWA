@@ -12,7 +12,7 @@ android {
         minSdk = 26
         targetSdk = 34
         versionCode = (project.findProperty("tswaVersionCode") as String?)?.toIntOrNull() ?: 1
-        versionName = "0.1.0"
+        versionName = "0.2.0"
     }
 
     // Release signing is supplied by GitHub Secrets in CI (see docs/SIGNING.md).
