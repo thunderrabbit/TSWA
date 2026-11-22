@@ -258,7 +258,7 @@
       <summary>Temperatures worth knowing</summary>
       <table id="landmarks"></table>
     </details>
-    <p class="hint" style="margin-top:10px">F = C × 9/5 + 32 &nbsp;·&nbsp; K = C + 273.15</p>
+    <p class="hint" style="margin-top:10px">F = C × 9/5 + 32 &nbsp;·&nbsp; K = C + 273.15 &nbsp;·&nbsp; °R = (C + 273.15) × 9/5</p>
   </section>
 </div>
 
@@ -286,11 +286,12 @@
 const SCALES = [
   { key: "C", name: "Celsius",    sym: "°C", from: c => c,              digits: 1 },
   { key: "F", name: "Fahrenheit", sym: "°F", from: c => c * 9 / 5 + 32, digits: 1 },
-  { key: "K", name: "Kelvin",     sym: "K",  from: c => c + 273.15,     digits: 1 }
+  { key: "K", name: "Kelvin",     sym: "K",  from: c => c + 273.15,     digits: 1 },
+  { key: "R", name: "Rankine",    sym: "°R", from: c => (c + 273.15) * 9 / 5, digits: 1 }
 ];
 // Which scales the tap cycle may visit (mg #886). Kelvin is off by
 // default; the Settings page flips these. Persisted in localStorage.
-const SCALE_DEFAULTS = { C: true, F: true, K: false };
+const SCALE_DEFAULTS = { C: true, F: true, K: false, R: false };
 let enabled = { ...SCALE_DEFAULTS };
 try {
   const saved = JSON.parse(localStorage.getItem("tswa-scales") || "null");
@@ -392,7 +393,7 @@ function renderConverter() {
   $("vdesc").textContent = v.d;
 }
 function cycleUnit() {
-  // Step to the next enabled scale in the fixed C, F, K order,
+  // Step to the next enabled scale in the fixed C, F, K, R order,
   // wrapping around. With a single scale enabled, stay on it.
   if (enabledScales().length > 1) {
     do { unit = (unit + 1) % SCALES.length; } while (!enabled[SCALES[unit].key]);
