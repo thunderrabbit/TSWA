@@ -18,13 +18,11 @@ jobs:
       - name: Check out the repo
         uses: actions/checkout@v4
 
-      - name: Stamp version into the app page
+      - name: Work out the version
         run: |
           VERSION=$(grep -oP 'val tswaBaseVersionName = "\K[^"]+' app/build.gradle.kts)
           FULL="${VERSION}.${{ github.run_number }}"
           echo "APP_VERSION_FULL=$FULL" >> "$GITHUB_ENV"
-          sed -i "s/__VERSION__/$FULL/" app/src/main/assets/www/index.html
-          grep -o "v$FULL" app/src/main/assets/www/index.html
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
