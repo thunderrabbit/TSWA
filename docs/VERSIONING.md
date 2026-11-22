@@ -6,10 +6,16 @@ How TSWA's version numbers work, written down at Rob's request on
 ## Release tags
 
 Every CI build publishes a GitHub Release tagged `v<versionName>.<run>`,
-for example `v0.3.0.20`. The `versionName` lives in
-`app/build.gradle.kts`; the workflow appends the GitHub Actions run
-number and stamps the full string into the app page footer, so the
-version shown inside the app always names the exact build.
+for example `v0.3.2.23`. The base `versionName` (the first three
+segments) lives in `app/build.gradle.kts` as `tswaBaseVersionName`; the
+workflow appends the GitHub Actions run number and passes the full
+string to Gradle as the `tswaVersionName` property, so the four-part
+string is the versionName inside the binary itself, not just a label.
+It is also stamped into the app page footer and used as the release
+tag. One version, seen everywhere: Rob's rule is that the version
+visible in the app and the version visible on the Play Store must be
+the same version, and since 0.3.2 they are, because the Play Store
+shows the binary's versionName.
 
 The run number needs no decision: CI increments it on every build, so
 builds that share a versionName are still distinct (the birth series
@@ -38,6 +44,7 @@ ran `v0.1.0.1` through `v0.1.0.17`).
 | 0.2.0 | Settings page with per-scale toggles, Kelvin off by default |
 | 0.3.0 | Rankine scale; the launcher icon rode along as v0.3.0.20 |
 | 0.3.1 | This versioning plan, written down and corrected (see below) |
+| 0.3.2 | One visible version: the four-part string becomes the binary's versionName, so app, tag and Play Store agree |
 
 ## versionCode
 
