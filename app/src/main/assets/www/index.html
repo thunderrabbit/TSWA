@@ -43,6 +43,16 @@
   }
   .tabbar button.on { color: var(--accent); border-top-color: var(--accent); }
   .tabbar svg { width: 22px; height: 22px; }
+  /* ---------- settings ---------- */
+  .setrow {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 11px 0; border-bottom: 1px solid var(--line); cursor: pointer;
+    font-size: 16px;
+  }
+  .setrow:last-child { border-bottom: none; }
+  .setrow .sym { color: var(--muted); }
+  .setrow input { width: 26px; height: 26px; accent-color: var(--accent); flex: 0 0 auto; }
+  .setrow input:disabled { opacity: 0.35; }
   /* ---------- converter ---------- */
   .pills { display: flex; gap: 8px; justify-content: center; margin-bottom: 6px; }
   .pill {
@@ -187,6 +197,10 @@
     <symbol id="g-swap" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M4 7h13M13 3l4 4-4 4M20 17H7M11 13l-4 4 4 4"/>
     </symbol>
+    <symbol id="g-gear" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+      <circle cx="12" cy="12" r="3.2"/>
+      <path d="M12 2.8v2.6M12 18.6v2.6M2.8 12h2.6M18.6 12h2.6M5.5 5.5l1.8 1.8M16.7 16.7l1.8 1.8M18.5 5.5l-1.8 1.8M7.3 16.7l-1.8 1.8"/>
+    </symbol>
   </defs>
 </svg>
 
@@ -210,7 +224,7 @@
     <div class="feels" id="wxfeels" data-temp="">Feels like –</div>
   </div>
   <div class="hl" id="wxhl"></div>
-  <div class="hintline">Tap any temperature to switch °C / °F / K</div>
+  <div class="hintline" id="wxhint"></div>
 
   <div class="hourly" id="hourly"></div>
 
@@ -226,11 +240,9 @@
 <div class="page" id="page-converter">
   <section class="card" id="converter">
     <h2>Temperature converter</h2>
-    <div class="pills" id="pills">
-      <span class="pill" data-u="0">°C</span><span class="pill" data-u="1">°F</span><span class="pill" data-u="2">K</span>
-    </div>
+    <div class="pills" id="pills"></div>
     <button class="bignum" id="bignum" aria-label="Tap to step to the next temperature scale">22.0°</button>
-    <div class="hint">Tap the number to step °C → °F → K</div>
+    <div class="hint" id="convhint"></div>
     <div class="verdict"><div class="t" id="vtitle"></div><div class="d" id="vdesc"></div></div>
     <div class="sliderwrap">
       <div class="centre"></div>
@@ -250,11 +262,20 @@
   </section>
 </div>
 
+<div class="page" id="page-settings">
+  <section class="card">
+    <h2>Scales</h2>
+    <div id="scaleSettings"></div>
+    <p class="hint" style="margin-top:10px">Tap the big number to step through the scales that are on. At least one scale must stay on.</p>
+  </section>
+</div>
+
 <footer>TSWA — Tri-Scale Weather App · GPL-3.0 · Made so Rob can tell family in the USA what the weather is in Adelaide.</footer>
 
 <nav class="tabbar">
   <button id="tab-weather" class="on" data-page="page-weather"><svg><use href="#g-partly"/></svg>Weather</button>
   <button id="tab-converter" data-page="page-converter"><svg><use href="#g-swap"/></svg>Converter</button>
+  <button id="tab-settings" data-page="page-settings"><svg><use href="#g-gear"/></svg>Settings</button>
 </nav>
 
 <script>
@@ -263,11 +284,28 @@
 // Global state is shared by both pages on purpose: the scale chosen on one
 // page is the scale shown on the other. Switching pages resets nothing.
 const SCALES = [
-  { name: "Celsius",    sym: "°C", from: c => c,              digits: 1 },
-  { name: "Fahrenheit", sym: "°F", from: c => c * 9 / 5 + 32, digits: 1 },
-  { name: "Kelvin",     sym: "K",  from: c => c + 273.15,     digits: 1 }
+  { key: "C", name: "Celsius",    sym: "°C", from: c => c,              digits: 1 },
+  { key: "F", name: "Fahrenheit", sym: "°F", from: c => c * 9 / 5 + 32, digits: 1 },
+  { key: "K", name: "Kelvin",     sym: "K",  from: c => c + 273.15,     digits: 1 }
 ];
+// Which scales the tap cycle may visit (mg #886). Kelvin is off by
+// default; the Settings page flips these. Persisted in localStorage.
+const SCALE_DEFAULTS = { C: true, F: true, K: false };
+let enabled = { ...SCALE_DEFAULTS };
+try {
+  const saved = JSON.parse(localStorage.getItem("tswa-scales") || "null");
+  if (saved) for (const s of SCALES)
+    if (typeof saved[s.key] === "boolean") enabled[s.key] = saved[s.key];
+} catch (e) {}
+// The guard from the issue title: at least one scale stays ON.
+if (!SCALES.some(s => enabled[s.key])) enabled.C = true;
+const enabledScales = () => SCALES.filter(s => enabled[s.key]);
+const firstEnabledIndex = () => SCALES.findIndex(s => enabled[s.key]);
+function saveScales() {
+  try { localStorage.setItem("tswa-scales", JSON.stringify(enabled)); } catch (e) {}
+}
 let unit = 0;
+if (!enabled[SCALES[unit].key]) unit = firstEnabledIndex();
 let tempC = 22;
 let wx = null;
 
@@ -328,14 +366,39 @@ const PRESETS = [
   ["Freezing", 0], ["Adelaide now-ish", 23.6], ["Body temp", 37],
   ["Death Valley record", 56.7], ["Boiling", 100], ["Paper burns", 232.78], ["Pizza oven", 260]
 ];
+function renderPills() {
+  // One pill per enabled scale; the shown scale is highlighted.
+  $("pills").innerHTML = SCALES.map((s, i) => enabled[s.key] ?
+    "<span class='pill" + (i === unit ? " on" : "") + "' data-u='" + i + "'>" + s.sym + "</span>" : "").join("");
+}
+function renderHints() {
+  // Hint copy names only the scales that are actually on.
+  const on = enabledScales();
+  if (on.length === 1) {
+    const msg = "Only " + on[0].sym + " is on — add more in Settings";
+    $("convhint").textContent = msg;
+    $("wxhint").textContent = msg;
+  } else {
+    $("convhint").textContent = "Tap the number to step " + on.map(s => s.sym).join(" → ");
+    $("wxhint").textContent = "Tap any temperature to switch " + on.map(s => s.sym).join(" / ");
+  }
+}
 function renderConverter() {
   $("bignum").textContent = fmt(tempC);
-  document.querySelectorAll("#pills .pill").forEach((p, i) => p.classList.toggle("on", i === unit));
+  renderPills();
+  renderHints();
   const v = verdict(tempC);
   $("vtitle").textContent = v.t;
   $("vdesc").textContent = v.d;
 }
-function cycleUnit() { unit = (unit + 1) % SCALES.length; renderConverter(); renderWeather(); }
+function cycleUnit() {
+  // Step to the next enabled scale in the fixed C, F, K order,
+  // wrapping around. With a single scale enabled, stay on it.
+  if (enabledScales().length > 1) {
+    do { unit = (unit + 1) % SCALES.length; } while (!enabled[SCALES[unit].key]);
+  }
+  renderConverter(); renderWeather();
+}
 $("bignum").addEventListener("click", cycleUnit);
 
 const jog = $("jog");
@@ -359,6 +422,35 @@ PRESETS.forEach(([label, c]) => {
 function renderLandmarks() {
   $("landmarks").innerHTML = LANDMARKS.map(([label, c]) =>
     "<tr><td>" + label + "</td><td>" + fmt(c) + "</td></tr>").join("");
+}
+
+// ---------- settings: one toggle per scale ----------
+function renderSettings() {
+  const onCount = enabledScales().length;
+  $("scaleSettings").innerHTML = SCALES.map((s, i) => {
+    const on = enabled[s.key];
+    // The last enabled scale cannot be switched off (mg #886).
+    const locked = on && onCount === 1;
+    return "<label class='setrow'><span>" + s.name +
+      " <span class='sym'>" + s.sym + "</span></span>" +
+      "<input type='checkbox' data-scale='" + i + "'" +
+      (on ? " checked" : "") + (locked ? " disabled" : "") + "></label>";
+  }).join("");
+  document.querySelectorAll("#scaleSettings input").forEach(inp =>
+    inp.addEventListener("change", () => setScaleEnabled(+inp.dataset.scale, inp.checked)));
+}
+function setScaleEnabled(i, on) {
+  const s = SCALES[i];
+  if (!on && enabled[s.key] && enabledScales().length === 1) {
+    renderSettings(); // refuse: at least one scale must stay on
+    return;
+  }
+  enabled[s.key] = on;
+  saveScales();
+  // If the scale on screen was just switched off, fall back to
+  // the first enabled scale so every render stays in the set.
+  if (!enabled[SCALES[unit].key]) unit = firstEnabledIndex();
+  renderSettings(); renderConverter(); renderWeather();
 }
 
 // ---------- weather (Open-Meteo, free, no key) ----------
@@ -537,6 +629,7 @@ try {
 } catch (e) {}
 renderConverter();
 renderWeather();
+renderSettings();
 loadWeather(-34.9285, 138.6007, "Adelaide, Australia");
 </script>
 </body>
