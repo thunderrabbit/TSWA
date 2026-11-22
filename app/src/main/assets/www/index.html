@@ -263,11 +263,28 @@
 // Global state is shared by both pages on purpose: the scale chosen on one
 // page is the scale shown on the other. Switching pages resets nothing.
 const SCALES = [
-  { name: "Celsius",    sym: "°C", from: c => c,              digits: 1 },
-  { name: "Fahrenheit", sym: "°F", from: c => c * 9 / 5 + 32, digits: 1 },
-  { name: "Kelvin",     sym: "K",  from: c => c + 273.15,     digits: 1 }
+  { key: "C", name: "Celsius",    sym: "°C", from: c => c,              digits: 1 },
+  { key: "F", name: "Fahrenheit", sym: "°F", from: c => c * 9 / 5 + 32, digits: 1 },
+  { key: "K", name: "Kelvin",     sym: "K",  from: c => c + 273.15,     digits: 1 }
 ];
+// Which scales the tap cycle may visit (mg #886). Kelvin is off by
+// default; the Settings page flips these. Persisted in localStorage.
+const SCALE_DEFAULTS = { C: true, F: true, K: false };
+let enabled = { ...SCALE_DEFAULTS };
+try {
+  const saved = JSON.parse(localStorage.getItem("tswa-scales") || "null");
+  if (saved) for (const s of SCALES)
+    if (typeof saved[s.key] === "boolean") enabled[s.key] = saved[s.key];
+} catch (e) {}
+// The guard from the issue title: at least one scale stays ON.
+if (!SCALES.some(s => enabled[s.key])) enabled.C = true;
+const enabledScales = () => SCALES.filter(s => enabled[s.key]);
+const firstEnabledIndex = () => SCALES.findIndex(s => enabled[s.key]);
+function saveScales() {
+  try { localStorage.setItem("tswa-scales", JSON.stringify(enabled)); } catch (e) {}
+}
 let unit = 0;
+if (!enabled[SCALES[unit].key]) unit = firstEnabledIndex();
 let tempC = 22;
 let wx = null;
 
