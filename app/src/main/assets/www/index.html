@@ -224,7 +224,7 @@
     <div class="feels" id="wxfeels" data-temp="">Feels like –</div>
   </div>
   <div class="hl" id="wxhl"></div>
-  <div class="hintline">Tap any temperature to switch °C / °F / K</div>
+  <div class="hintline" id="wxhint"></div>
 
   <div class="hourly" id="hourly"></div>
 
@@ -240,11 +240,9 @@
 <div class="page" id="page-converter">
   <section class="card" id="converter">
     <h2>Temperature converter</h2>
-    <div class="pills" id="pills">
-      <span class="pill" data-u="0">°C</span><span class="pill" data-u="1">°F</span><span class="pill" data-u="2">K</span>
-    </div>
+    <div class="pills" id="pills"></div>
     <button class="bignum" id="bignum" aria-label="Tap to step to the next temperature scale">22.0°</button>
-    <div class="hint">Tap the number to step °C → °F → K</div>
+    <div class="hint" id="convhint"></div>
     <div class="verdict"><div class="t" id="vtitle"></div><div class="d" id="vdesc"></div></div>
     <div class="sliderwrap">
       <div class="centre"></div>
@@ -368,9 +366,27 @@ const PRESETS = [
   ["Freezing", 0], ["Adelaide now-ish", 23.6], ["Body temp", 37],
   ["Death Valley record", 56.7], ["Boiling", 100], ["Paper burns", 232.78], ["Pizza oven", 260]
 ];
+function renderPills() {
+  // One pill per enabled scale; the shown scale is highlighted.
+  $("pills").innerHTML = SCALES.map((s, i) => enabled[s.key] ?
+    "<span class='pill" + (i === unit ? " on" : "") + "' data-u='" + i + "'>" + s.sym + "</span>" : "").join("");
+}
+function renderHints() {
+  // Hint copy names only the scales that are actually on.
+  const on = enabledScales();
+  if (on.length === 1) {
+    const msg = "Only " + on[0].sym + " is on — add more in Settings";
+    $("convhint").textContent = msg;
+    $("wxhint").textContent = msg;
+  } else {
+    $("convhint").textContent = "Tap the number to step " + on.map(s => s.sym).join(" → ");
+    $("wxhint").textContent = "Tap any temperature to switch " + on.map(s => s.sym).join(" / ");
+  }
+}
 function renderConverter() {
   $("bignum").textContent = fmt(tempC);
-  document.querySelectorAll("#pills .pill").forEach((p, i) => p.classList.toggle("on", i === unit));
+  renderPills();
+  renderHints();
   const v = verdict(tempC);
   $("vtitle").textContent = v.t;
   $("vdesc").textContent = v.d;
