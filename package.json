@@ -1,0 +1,14 @@
+{
+  "name": "tswa-quality-tools",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "lint:js": "eslint app/src/main/assets/www/index.html"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.15.0",
+    "eslint-plugin-html": "^8.2.1",
+    "globals": "^17.14.0"
+  }
+}
