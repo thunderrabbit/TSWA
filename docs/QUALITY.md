@@ -40,10 +40,10 @@ npm run lint:js
 ## In CI
 
 `.github/workflows/quality.yml` runs all three on every push to
-master and every pull request. It is a separate workflow from the
-release build: a red Quality run does not yet block a release. Making
-the release depend on it is a deliberate step for later, not an
-accident to drift into.
+master and every pull request. The release workflow also calls it as
+its first job, and the release build `needs` that job: a red Quality
+run means no release is built. That dependency was added on
+2026-11-22 at Rob's direction, the day the tools landed.
 
 ## One convention worth naming
 
