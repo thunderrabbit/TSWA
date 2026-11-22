@@ -352,7 +352,14 @@ function renderConverter() {
   $("vtitle").textContent = v.t;
   $("vdesc").textContent = v.d;
 }
-function cycleUnit() { unit = (unit + 1) % SCALES.length; renderConverter(); renderWeather(); }
+function cycleUnit() {
+  // Step to the next enabled scale in the fixed C, F, K order,
+  // wrapping around. With a single scale enabled, stay on it.
+  if (enabledScales().length > 1) {
+    do { unit = (unit + 1) % SCALES.length; } while (!enabled[SCALES[unit].key]);
+  }
+  renderConverter(); renderWeather();
+}
 $("bignum").addEventListener("click", cycleUnit);
 
 const jog = $("jog");
