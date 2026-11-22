@@ -3,6 +3,12 @@ plugins {
     id("org.jetbrains.kotlin.android")
 }
 
+// The base version (MAJOR.MINOR.PATCH; see docs/VERSIONING.md). CI passes
+// tswaVersionName with its run number appended, so the versionName inside
+// the binary, the version shown in the app and the Play Store listing are
+// one and the same string.
+val tswaBaseVersionName = "0.3.2"
+
 android {
     namespace = "com.robnugen.tswa"
     compileSdk = 34
@@ -12,7 +18,7 @@ android {
         minSdk = 26
         targetSdk = 34
         versionCode = (project.findProperty("tswaVersionCode") as String?)?.toIntOrNull() ?: 1
-        versionName = "0.3.1"
+        versionName = (project.findProperty("tswaVersionName") as String?) ?: tswaBaseVersionName
     }
 
     // Release signing is supplied by GitHub Secrets in CI (see docs/SIGNING.md).

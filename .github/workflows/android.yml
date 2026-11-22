@@ -16,7 +16,7 @@ jobs:
 
       - name: Stamp version into the app page
         run: |
-          VERSION=$(grep -oP 'versionName = "\K[^"]+' app/build.gradle.kts)
+          VERSION=$(grep -oP 'val tswaBaseVersionName = "\K[^"]+' app/build.gradle.kts)
           FULL="${VERSION}.${{ github.run_number }}"
           echo "APP_VERSION_FULL=$FULL" >> "$GITHUB_ENV"
           sed -i "s/__VERSION__/$FULL/" app/src/main/assets/www/index.html
@@ -76,7 +76,7 @@ jobs:
           TSWA_KEY_PASSWORD: ${{ secrets.TSWA_KEY_PASSWORD }}
         run: |
           set +e
-          gradle :app:assembleRelease -PtswaVersionCode=${{ github.run_number }} --stacktrace 2>&1 | tee build-release.log
+          gradle :app:assembleRelease -PtswaVersionCode=${{ github.run_number }} -PtswaVersionName=${{ env.APP_VERSION_FULL }} --stacktrace 2>&1 | tee build-release.log
           code=${PIPESTATUS[0]}
           if [ "$code" != "0" ]; then
             echo "Release build failed; publishing the error extract as an annotation."
