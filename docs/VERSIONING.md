@@ -26,8 +26,8 @@ ran `v0.1.0.1` through `v0.1.0.17`).
   `0.3.0` the Rankine scale.
 - **PATCH** — a shipped change that is not a new capability: bug
   fixes, polish, artwork and other asset changes. Bumped in the commit
-  that makes the change. (The launcher icon should have been `0.3.1`
-  under this rule; it shipped as `v0.3.0.20` before the rule was
+  that makes the change. (Under this rule the launcher icon would have
+  been a PATCH bump; it shipped as `v0.3.0.20` before the rule was
   written down.)
 
 ## History so far
@@ -37,13 +37,17 @@ ran `v0.1.0.1` through `v0.1.0.17`).
 | 0.1.0 | The birth series, runs 1–17: converter, weather page, verdicts |
 | 0.2.0 | Settings page with per-scale toggles, Kelvin off by default |
 | 0.3.0 | Rankine scale; the launcher icon rode along as v0.3.0.20 |
+| 0.3.1 | This versioning plan, written down and corrected (see below) |
 
-## versionCode: a known gap
+## versionCode
 
 Android also carries an integer `versionCode`, separate from
-`versionName`. Ours comes from the `tswaVersionCode` Gradle property
-and defaults to 1; CI does not set it, so every build so far has had
-versionCode 1. That is fine for sideloading from GitHub Releases, but
-Google Play requires each upload to have a strictly higher
-`versionCode` than the one before. Before the closed track opens, CI
-must pass its run number as `tswaVersionCode`. Not yet implemented.
+`versionName`, and Google Play requires each upload to have a strictly
+higher one than the upload before. Ours is already Play-shaped: the
+workflow passes its run number to Gradle as the `tswaVersionCode`
+property (`gradle :app:assembleRelease -PtswaVersionCode=<run>`), so a
+build's `versionCode` always equals the fourth segment of its release
+tag and strictly increases from build to build. The property's default
+of 1 in `app/build.gradle.kts` only applies to local builds, which CI
+never ships. (The first draft of this page, shipped in v0.3.0.21,
+wrongly called this a gap; corrected in 0.3.1.)
