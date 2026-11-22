@@ -53,6 +53,31 @@
   .setrow .sym { color: var(--muted); }
   .setrow input { width: 26px; height: 26px; accent-color: var(--accent); flex: 0 0 auto; }
   .setrow input:disabled { opacity: 0.35; }
+  /* ---------- settings: saved places ---------- */
+  .saveplace {
+    display: block; width: 100%; background: none; cursor: pointer;
+    border: 1.5px dashed var(--accent); color: var(--accent);
+    border-radius: 12px; padding: 12px; font-size: 15px; font-weight: 600;
+    margin-bottom: 14px;
+  }
+  .saveplace:disabled { border-color: var(--line); color: var(--muted); cursor: default; }
+  .saverow { position: relative; overflow: hidden; border-bottom: 1px solid var(--line); }
+  .saverow:last-child { border-bottom: none; }
+  .saverow .rowbg {
+    position: absolute; inset: 0; background: #a33327; color: #fff;
+    display: flex; align-items: center; padding-left: 14px;
+    font-weight: 600; font-size: 14px;
+  }
+  .saverow .rowfg {
+    position: relative; display: flex; align-items: center; gap: 10px;
+    background: var(--card); padding: 10px 0; touch-action: pan-y;
+  }
+  .saverow .drag {
+    color: var(--muted); font-size: 18px; padding: 4px 2px;
+    cursor: grab; touch-action: none; flex: 0 0 auto;
+  }
+  .saverow .sname { flex: 1; font-size: 16px; min-width: 0; overflow-wrap: break-word; }
+  .saverow .ssub { display: block; color: var(--muted); font-size: 12.5px; }
   /* ---------- converter ---------- */
   .pills { display: flex; gap: 8px; justify-content: center; margin-bottom: 6px; }
   .pill {
@@ -269,6 +294,15 @@
     <div id="scaleSettings"></div>
     <p class="hint" style="margin-top:10px">Tap the big number to step through the scales that are on. At least one scale must stay on.</p>
   </section>
+
+  <button class="saveplace" id="savePlace" style="display:none"></button>
+
+  <section class="card">
+    <h2>Saved places</h2>
+    <div id="savedList"></div>
+    <p class="hint" id="savedEmpty">No saved places yet. View a place on the Weather page, then save it with the button above.</p>
+    <p class="hint" style="margin-top:6px">Drag the handle to sort · swipe a place right to delete it. Deleting every place starts onboarding again.</p>
+  </section>
 </div>
 
 <footer>TSWA — Tri-Scale Weather App · GPL-3.0 · Made so Rob can tell family in the USA what the weather is in Adelaide.</footer>
@@ -462,6 +496,137 @@ function setScaleEnabled(i, on) {
   renderSettings(); renderConverter(); renderWeather();
 }
 
+// ---------- settings: saved places ----------
+// The button sits below the scale selector, above the Saved places
+// label, as Rob laid it out (2026-11-23). Saving puts the place on
+// TOP of the list; the Weather page slider shows the same order.
+function renderSaveButton() {
+  const b = $("savePlace");
+  if (!curPlace) { b.style.display = "none"; return; }
+  b.style.display = "";
+  if (isSaved(curPlace)) {
+    b.disabled = true;
+    b.textContent = "✓ Saved — " + curPlace.label;
+  } else {
+    b.disabled = false;
+    b.textContent = "+ Save current place (" + curPlace.label + ")";
+  }
+}
+$("savePlace").addEventListener("click", () => {
+  if (!curPlace || isSaved(curPlace)) return;
+  savedPlaces.unshift({ label: curPlace.label, lat: curPlace.lat, lon: curPlace.lon, full: curPlace.full });
+  persistPlaces();
+  renderPlaces(); renderSavedList(); renderSaveButton();
+});
+function removePlace(i) {
+  savedPlaces.splice(i, 1);
+  persistPlaces();
+  // An empty list is the first-run state again, so emptying it also
+  // clears the onboarded flag: the next launch asks about location
+  // once more. That is Rob's way back into onboarding (2026-11-23).
+  if (!savedPlaces.length) {
+    try { localStorage.removeItem("tswa-onboarded"); } catch { /* storage unavailable: onboarding just won't reset */ }
+  }
+  renderPlaces(); renderSavedList(); renderSaveButton();
+}
+function renderSavedList() {
+  const list = $("savedList");
+  list.innerHTML = "";
+  $("savedEmpty").style.display = savedPlaces.length ? "none" : "";
+  savedPlaces.forEach((p, i) => {
+    const row = document.createElement("div");
+    row.className = "saverow";
+    row.dataset.i = i;
+    const bg = document.createElement("div");
+    bg.className = "rowbg";
+    bg.textContent = "Delete";
+    const fg = document.createElement("div");
+    fg.className = "rowfg";
+    const handle = document.createElement("span");
+    handle.className = "drag";
+    handle.textContent = "⠿";
+    handle.setAttribute("aria-label", "Drag to sort");
+    const name = document.createElement("span");
+    name.className = "sname";
+    name.textContent = p.label;
+    if (p.full && p.full !== p.label) {
+      const sub = document.createElement("span");
+      sub.className = "ssub";
+      sub.textContent = p.full;
+      name.appendChild(sub);
+    }
+    fg.appendChild(handle);
+    fg.appendChild(name);
+    row.appendChild(bg);
+    row.appendChild(fg);
+    list.appendChild(row);
+    attachDrag(handle, row);
+    attachSwipe(fg, row);
+  });
+}
+// Sorting: drag the handle and the row follows the finger; the
+// stored order is rewritten from the DOM order on release. Indices
+// exist only in the data; the user never sees a number (Rob).
+function attachDrag(handle, row) {
+  handle.addEventListener("pointerdown", e => {
+    e.preventDefault();
+    const list = $("savedList");
+    const rowH = row.offsetHeight || 1;
+    const start = [...list.children].indexOf(row);
+    const startY = e.clientY;
+    row.style.zIndex = "2";
+    handle.setPointerCapture(e.pointerId);
+    const move = ev => {
+      const dy = ev.clientY - startY;
+      row.style.transform = "translateY(" + dy + "px)";
+      const target = Math.max(0, Math.min(savedPlaces.length - 1, start + Math.round(dy / rowH)));
+      const now = [...list.children].indexOf(row);
+      if (target !== now) {
+        const ref = list.children[target];
+        if (target > now) ref.after(row); else ref.before(row);
+      }
+    };
+    const up = () => {
+      handle.removeEventListener("pointermove", move);
+      handle.removeEventListener("pointerup", up);
+      handle.removeEventListener("pointercancel", up);
+      row.style.transform = "";
+      row.style.zIndex = "";
+      savedPlaces = [...list.children].map(r => savedPlaces[+r.dataset.i]);
+      persistPlaces();
+      renderSavedList(); renderPlaces();
+    };
+    handle.addEventListener("pointermove", move);
+    handle.addEventListener("pointerup", up);
+    handle.addEventListener("pointercancel", up);
+  });
+}
+// Deleting: swipe a row right, past the threshold, and it is gone.
+function attachSwipe(fg, row) {
+  fg.addEventListener("pointerdown", e => {
+    if (e.target.closest(".drag")) return; // the handle sorts; it does not swipe
+    const startX = e.clientX, startY = e.clientY;
+    let dx = 0, active = false;
+    fg.setPointerCapture(e.pointerId);
+    const move = ev => {
+      dx = ev.clientX - startX;
+      const dy = ev.clientY - startY;
+      if (!active && dx > 8 && Math.abs(dx) > Math.abs(dy)) active = true;
+      if (active) fg.style.transform = "translateX(" + Math.max(0, dx) + "px)";
+    };
+    const up = () => {
+      fg.removeEventListener("pointermove", move);
+      fg.removeEventListener("pointerup", up);
+      fg.removeEventListener("pointercancel", up);
+      fg.style.transform = "";
+      if (active && dx > 90) removePlace(+row.dataset.i);
+    };
+    fg.addEventListener("pointermove", move);
+    fg.addEventListener("pointerup", up);
+    fg.addEventListener("pointercancel", up);
+  });
+}
+
 // ---------- weather (Open-Meteo, free, no key) ----------
 const WMO = {0:"Clear sky",1:"Mainly clear",2:"Partly cloudy",3:"Overcast",45:"Fog",48:"Rime fog",
   51:"Light drizzle",53:"Drizzle",55:"Dense drizzle",61:"Light rain",63:"Rain",65:"Heavy rain",
@@ -538,6 +703,7 @@ async function loadWeather(lat, lon, label, short) {
   }
   renderWeather();
   renderPlaces();
+  renderSaveButton();
 }
 const COMPASS = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"];
 const uvWord = uv => uv < 3 ? "Low" : uv < 6 ? "Moderate" : uv < 8 ? "High" : uv < 11 ? "Very high" : "Extreme";
@@ -662,7 +828,10 @@ try {
 renderConverter();
 renderWeather();
 renderSettings();
-loadWeather(-34.9285, 138.6007, "Adelaide, Australia");
+renderPlaces();
+renderSavedList();
+renderSaveButton();
+loadWeather(-34.9285, 138.6007, "Adelaide, Australia", "Adelaide");
 </script>
 </body>
 </html>
