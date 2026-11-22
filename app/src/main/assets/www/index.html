@@ -43,6 +43,16 @@
   }
   .tabbar button.on { color: var(--accent); border-top-color: var(--accent); }
   .tabbar svg { width: 22px; height: 22px; }
+  /* ---------- settings ---------- */
+  .setrow {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 11px 0; border-bottom: 1px solid var(--line); cursor: pointer;
+    font-size: 16px;
+  }
+  .setrow:last-child { border-bottom: none; }
+  .setrow .sym { color: var(--muted); }
+  .setrow input { width: 26px; height: 26px; accent-color: var(--accent); flex: 0 0 auto; }
+  .setrow input:disabled { opacity: 0.35; }
   /* ---------- converter ---------- */
   .pills { display: flex; gap: 8px; justify-content: center; margin-bottom: 6px; }
   .pill {
@@ -187,6 +197,10 @@
     <symbol id="g-swap" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
       <path d="M4 7h13M13 3l4 4-4 4M20 17H7M11 13l-4 4 4 4"/>
     </symbol>
+    <symbol id="g-gear" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+      <circle cx="12" cy="12" r="3.2"/>
+      <path d="M12 2.8v2.6M12 18.6v2.6M2.8 12h2.6M18.6 12h2.6M5.5 5.5l1.8 1.8M16.7 16.7l1.8 1.8M18.5 5.5l-1.8 1.8M7.3 16.7l-1.8 1.8"/>
+    </symbol>
   </defs>
 </svg>
 
@@ -250,11 +264,20 @@
   </section>
 </div>
 
+<div class="page" id="page-settings">
+  <section class="card">
+    <h2>Scales</h2>
+    <div id="scaleSettings"></div>
+    <p class="hint" style="margin-top:10px">Tap the big number to step through the scales that are on. At least one scale must stay on.</p>
+  </section>
+</div>
+
 <footer>TSWA — Tri-Scale Weather App · GPL-3.0 · Made so Rob can tell family in the USA what the weather is in Adelaide.</footer>
 
 <nav class="tabbar">
   <button id="tab-weather" class="on" data-page="page-weather"><svg><use href="#g-partly"/></svg>Weather</button>
   <button id="tab-converter" data-page="page-converter"><svg><use href="#g-swap"/></svg>Converter</button>
+  <button id="tab-settings" data-page="page-settings"><svg><use href="#g-gear"/></svg>Settings</button>
 </nav>
 
 <script>
@@ -383,6 +406,35 @@ PRESETS.forEach(([label, c]) => {
 function renderLandmarks() {
   $("landmarks").innerHTML = LANDMARKS.map(([label, c]) =>
     "<tr><td>" + label + "</td><td>" + fmt(c) + "</td></tr>").join("");
+}
+
+// ---------- settings: one toggle per scale ----------
+function renderSettings() {
+  const onCount = enabledScales().length;
+  $("scaleSettings").innerHTML = SCALES.map((s, i) => {
+    const on = enabled[s.key];
+    // The last enabled scale cannot be switched off (mg #886).
+    const locked = on && onCount === 1;
+    return "<label class='setrow'><span>" + s.name +
+      " <span class='sym'>" + s.sym + "</span></span>" +
+      "<input type='checkbox' data-scale='" + i + "'" +
+      (on ? " checked" : "") + (locked ? " disabled" : "") + "></label>";
+  }).join("");
+  document.querySelectorAll("#scaleSettings input").forEach(inp =>
+    inp.addEventListener("change", () => setScaleEnabled(+inp.dataset.scale, inp.checked)));
+}
+function setScaleEnabled(i, on) {
+  const s = SCALES[i];
+  if (!on && enabled[s.key] && enabledScales().length === 1) {
+    renderSettings(); // refuse: at least one scale must stay on
+    return;
+  }
+  enabled[s.key] = on;
+  saveScales();
+  // If the scale on screen was just switched off, fall back to
+  // the first enabled scale so every render stays in the set.
+  if (!enabled[SCALES[unit].key]) unit = firstEnabledIndex();
+  renderSettings(); renderConverter(); renderWeather();
 }
 
 // ---------- weather (Open-Meteo, free, no key) ----------
@@ -561,6 +613,7 @@ try {
 } catch (e) {}
 renderConverter();
 renderWeather();
+renderSettings();
 loadWeather(-34.9285, 138.6007, "Adelaide, Australia");
 </script>
 </body>
