@@ -297,13 +297,13 @@ try {
   const saved = JSON.parse(localStorage.getItem("tswa-scales") || "null");
   if (saved) for (const s of SCALES)
     if (typeof saved[s.key] === "boolean") enabled[s.key] = saved[s.key];
-} catch (e) {}
+} catch { /* stored settings unreadable: keep the defaults */ }
 // The guard from the issue title: at least one scale stays ON.
 if (!SCALES.some(s => enabled[s.key])) enabled.C = true;
 const enabledScales = () => SCALES.filter(s => enabled[s.key]);
 const firstEnabledIndex = () => SCALES.findIndex(s => enabled[s.key]);
 function saveScales() {
-  try { localStorage.setItem("tswa-scales", JSON.stringify(enabled)); } catch (e) {}
+  try { localStorage.setItem("tswa-scales", JSON.stringify(enabled)); } catch { /* storage unavailable: settings just won't persist */ }
 }
 let unit = 0;
 if (!enabled[SCALES[unit].key]) unit = firstEnabledIndex();
@@ -503,10 +503,10 @@ async function loadWeather(lat, lon, label) {
     wx = await r.json();
     wxFetchedAt = new Date();
     $("wxplace").textContent = label;
-    try { localStorage.setItem("tswa-wx", JSON.stringify({ wx, label })); } catch (e) {}
+    try { localStorage.setItem("tswa-wx", JSON.stringify({ wx, label })); } catch { /* storage unavailable: skip caching */ }
     $("wxstatus").textContent = "Weather: Open-Meteo (CC BY 4.0) · Updated " +
       wxFetchedAt.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
-  } catch (e) {
+  } catch {
     $("wxstatus").textContent = "Weather: Open-Meteo (CC BY 4.0) · Last good data — offline";
   }
   renderWeather();
@@ -601,7 +601,7 @@ async function searchPlace() {
     if (!j.results || !j.results.length) { $("wxstatus").textContent = "No place found for “" + q + "”."; return; }
     const p = j.results[0];
     loadWeather(p.latitude, p.longitude, p.name + ", " + (p.country || ""));
-  } catch (e) { $("wxstatus").textContent = "Search failed (offline?)."; }
+  } catch { $("wxstatus").textContent = "Search failed (offline?)."; }
 }
 $("go").addEventListener("click", searchPlace);
 $("q").addEventListener("keydown", e => { if (e.key === "Enter") searchPlace(); });
@@ -613,7 +613,7 @@ function showPage(id) {
   if (cur) scrollMem[cur.id] = window.scrollY;
   document.querySelectorAll(".page").forEach(pg => pg.classList.toggle("on", pg.id === id));
   document.querySelectorAll(".tabbar button").forEach(b => b.classList.toggle("on", b.dataset.page === id));
-  try { localStorage.setItem("tswa-page", id); } catch (e) {}
+  try { localStorage.setItem("tswa-page", id); } catch { /* storage unavailable: skip persisting */ }
   window.scrollTo(0, scrollMem[id] || 0);
 }
 document.querySelectorAll(".tabbar button").forEach(b =>
@@ -621,13 +621,13 @@ document.querySelectorAll(".tabbar button").forEach(b =>
 try {
   const last = localStorage.getItem("tswa-page");
   if (last && document.getElementById(last)) showPage(last);
-} catch (e) {}
+} catch { /* stored page unreadable: stay on the default page */ }
 
 // restore last good weather, then refresh Adelaide by default
 try {
   const saved = JSON.parse(localStorage.getItem("tswa-wx") || "null");
   if (saved) { wx = saved.wx; $("wxplace").textContent = saved.label; }
-} catch (e) {}
+} catch { /* stored weather unreadable: start fresh */ }
 renderConverter();
 renderWeather();
 renderSettings();
