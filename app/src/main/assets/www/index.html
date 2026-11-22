@@ -823,7 +823,12 @@ try {
 // restore last good weather, then refresh Adelaide by default
 try {
   const saved = JSON.parse(localStorage.getItem("tswa-wx") || "null");
-  if (saved) { wx = saved.wx; $("wxplace").textContent = saved.label; }
+  if (saved) {
+    wx = saved.wx;
+    $("wxplace").textContent = saved.label;
+    if (isFinite(saved.lat) && isFinite(saved.lon))
+      curPlace = { label: saved.label, lat: saved.lat, lon: saved.lon, full: saved.label };
+  }
 } catch { /* stored weather unreadable: start fresh */ }
 renderConverter();
 renderWeather();
@@ -831,7 +836,37 @@ renderSettings();
 renderPlaces();
 renderSavedList();
 renderSaveButton();
-loadWeather(-34.9285, 138.6007, "Adelaide, Australia", "Adelaide");
+// Onboarding (mg #883, Rob 2026-11-23): the first run asks "allow
+// using your location?" through the system prompt. Yes: the current
+// location becomes the displayed place but is NOT saved, so the
+// list stays empty. No, or any failure: the Adelaide default, and
+// the search field is right there. Deleting every saved place in
+// Settings clears the flag, so onboarding can be re-run by hand.
+let onboarded = true;
+try { onboarded = !!localStorage.getItem("tswa-onboarded"); } catch { /* storage unavailable: skip onboarding rather than ask on every run */ }
+if (onboarded) {
+  loadWeather(-34.9285, 138.6007, "Adelaide, Australia", "Adelaide");
+} else {
+  try { localStorage.setItem("tswa-onboarded", "1"); } catch { /* storage unavailable: the ask just won't be remembered */ }
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(async pos => {
+      await loadWeather(pos.coords.latitude, pos.coords.longitude, "Your location", "Your location");
+      // Name the place from the forecast's timezone, as the website
+      // demo does: "Australia/Adelaide" becomes Adelaide.
+      const town = ((wx && wx.timezone) || "").split("/").pop().replace(/_/g, " ");
+      if (town) {
+        const full = "Your location near " + town;
+        $("wxplace").textContent = full;
+        curPlace = { label: town, lat: pos.coords.latitude, lon: pos.coords.longitude, full };
+        renderPlaces();
+        renderSaveButton();
+      }
+    }, () => loadWeather(-34.9285, 138.6007, "Adelaide, Australia", "Adelaide"),
+    { timeout: 10000, maximumAge: 600000 });
+  } else {
+    loadWeather(-34.9285, 138.6007, "Adelaide, Australia", "Adelaide");
+  }
+}
 </script>
 </body>
 </html>
