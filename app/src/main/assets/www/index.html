@@ -242,7 +242,7 @@
   <section class="card" id="converter">
     <h2>Temperature converter</h2>
     <div class="pills" id="pills"></div>
-    <button class="bignum" id="bignum" aria-label="Tap to step to the next temperature scale">22.0°</button>
+    <button class="bignum" id="bignum" aria-label="Tap to step to the next temperature scale">22.2°</button>
     <div class="hint" id="convhint"></div>
     <div class="verdict"><div class="t" id="vtitle"></div><div class="d" id="vdesc"></div></div>
     <div class="sliderwrap">
@@ -308,7 +308,13 @@ function saveScales() {
 }
 let unit = 0;
 if (!enabled[SCALES[unit].key]) unit = firstEnabledIndex();
-let tempC = 22;
+// The converter starts from the Weather page's temperature (Rob,
+// 2026-11-23); 22.2 C is the default when there is no weather to
+// work with. Values are Celsius here; the display converts.
+let tempC = 22.2;
+// True once the user sets the converter by hand (slider or preset);
+// from then on the weather no longer reseeds it.
+let convTouched = false;
 let wx = null;
 
 const $ = id => document.getElementById(id);
@@ -407,6 +413,7 @@ const jog = $("jog");
 let jogBase = null;
 jog.addEventListener("pointerdown", () => { jogBase = tempC; });
 jog.addEventListener("input", () => {
+  convTouched = true;
   if (jogBase === null) jogBase = tempC;
   tempC = Math.max(-273.15, +(jogBase + Number(jog.value) * 0.2).toFixed(2));
   renderConverter();
@@ -418,7 +425,7 @@ jog.addEventListener("blur", springBack);
 
 PRESETS.forEach(([label, c]) => {
   const b = document.createElement("button");
-  b.textContent = label; b.addEventListener("click", () => { tempC = c; renderConverter(); });
+  b.textContent = label; b.addEventListener("click", () => { convTouched = true; tempC = c; renderConverter(); });
   $("presets").appendChild(b);
 });
 function renderLandmarks() {
@@ -541,6 +548,9 @@ const cell = (k, v, sub) =>
 function renderWeather() {
   renderLandmarks();
   if (!wx || !wx.current) return;
+  // Until the user drives the converter themselves, it starts from
+  // the temperature on this page.
+  if (!convTouched) { tempC = wx.current.temperature_2m; renderConverter(); }
   const cur = wx.current, dly = wx.daily;
   // hero
   $("wxnum").innerHTML = fmt(cur.temperature_2m, false) + "<span class='u'>" + SCALES[unit].sym + "</span>";
