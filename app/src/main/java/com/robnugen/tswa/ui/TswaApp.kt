@@ -36,6 +36,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -85,6 +86,7 @@ fun TswaApp() {
                     TabPage(current)
                 }
             }
+            Footer()
         }
         TabBar(current, onSelect = { current = it })
     }
@@ -113,6 +115,18 @@ private fun Header() {
             modifier = Modifier.padding(top = 6.dp),
         )
     }
+}
+
+// The line at the foot of every page, as on the web version.
+@Composable
+private fun Footer() {
+    Text(
+        stringResource(R.string.footer),
+        color = TswaColors.Muted,
+        fontSize = 12.sp,
+        textAlign = TextAlign.Center,
+        modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
+    )
 }
 
 // An empty page that only says which tab it is; later issues fill them.
