@@ -4,6 +4,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
+import com.robnugen.tswa.places.LegacyStorage
+import com.robnugen.tswa.places.SavedPlaces
 import com.robnugen.tswa.settings.TswaPrefs
 import com.robnugen.tswa.temperature.Scale
 import com.robnugen.tswa.temperature.ScaleChoice
@@ -40,6 +42,39 @@ class AppState(
 
     fun seedConverter(celsius: Double) {
         if (!converterTouched) converterC = celsius
+    }
+
+    // The saved places, in display order.
+    var savedPlaces by mutableStateOf(prefs.savedPlaces)
+        private set
+
+    // The Save button: the place on screen goes to the top of the list.
+    fun saveCurrentPlace() {
+        savedPlaces = SavedPlaces.saveOnTop(savedPlaces, weather.currentPlace)
+        prefs.savedPlaces = savedPlaces
+    }
+
+    // Once ever: bring over the WebView version's saved places (and its
+    // scale choice, if none has been made here), but only into an empty
+    // list. [read] returns null when the old storage could not be read;
+    // then nothing is marked done and the next start tries again.
+    suspend fun importLegacyOnce(read: suspend () -> Map<String, String?>?) {
+        val needed = !prefs.legacyImportDone && savedPlaces.isEmpty()
+        val found = if (needed) read() else emptyMap()
+        if (found != null) {
+            val places = LegacyStorage.places(found["tswa-places"])
+            if (places.isNotEmpty()) {
+                savedPlaces = places
+                prefs.savedPlaces = places
+            }
+            val scales = LegacyStorage.scales(found["tswa-scales"])
+            if (scales != null && !prefs.hasEnabledScales) {
+                enabledScales = scales
+                prefs.enabledScales = scales
+                scale = ScaleChoice.shown(scale, scales)
+            }
+            prefs.legacyImportDone = true
+        }
     }
 
     // A Settings switch. If the shown scale goes off, show the first one on.

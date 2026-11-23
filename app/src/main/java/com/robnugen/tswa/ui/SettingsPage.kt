@@ -21,13 +21,19 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.robnugen.tswa.temperature.Scale
 import com.robnugen.tswa.temperature.ScaleChoice
+import com.robnugen.tswa.weather.Place
 
 @Composable
 fun SettingsPage(
     enabled: Set<Scale>,
     onToggle: (Scale) -> Unit,
+    current: Place,
+    saved: List<Place>,
+    onSave: () -> Unit,
 ) {
     ScalesCard(enabled, onToggle)
+    SavePlaceButton(current, saved, onSave)
+    SavedPlacesCard(saved)
 }
 
 // One row per scale, in C, F, K, R order. The last scale that is on
