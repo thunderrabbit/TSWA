@@ -22,7 +22,78 @@ Gradle via `gradle/actions/setup-gradle`. To build locally with the
 wrapper, run `gradle wrapper` once and use `./gradlew` from then on.
 
 ## Layout
-- `app/src/main/java/.../MainActivity.kt` — thin WebView shell.
-- `app/src/main/assets/www/index.html` — the whole TSWA UI (converter +
-  weather). This is the file to edit for UI iteration; a push rebuilds
-  the APK automatically.
+- `app/src/main/java/.../MainActivity.kt` — starts the Compose UI.
+- `app/src/main/java/.../ui/` — the UI: `TswaApp.kt` (header, pages,
+  tab bar, footer), `AppState.kt` (state shared by every page: the
+  scale shown, the converter's value, the weather), the pages
+  (`WeatherPage.kt` with `WeatherForecast.kt` and `WeatherDetails.kt`,
+  `ConverterPage.kt`, `SettingsPage.kt`), `SearchRow.kt`, `PlaceChips.kt`, `SavedPlacesSection.kt`,
+  `ScaleControl.kt` (a
+  temperature that steps the scale when tapped), `Hints.kt`, `Card.kt`,
+  `Tab.kt`, `TswaColors.kt`, `TswaTheme.kt`.
+- `app/src/main/res/drawable/wx_*.xml` — weather icons, drawn from the
+  web UI's glyphs.
+- `app/src/main/java/.../weather/` — the weather data: `OpenMeteo.kt`
+  (the fetch; it sends its own User-Agent because Open-Meteo refuses
+  Android's default one), `Forecast.kt` (the parsed response),
+  `WeatherCache.kt` (last good forecast in `weather_cache.json`),
+  `WeatherController.kt` (what the app shows and whether it is fresh),
+  `WeatherView.kt` (what the Weather page shows, and the details grid's
+  unit conversions), `Geocoding.kt` (place search), `Wmo.kt`,
+  `Place.kt`. Tests use a saved response in
+  `app/src/test/resources/`.
+- `app/src/main/java/.../places/` — saved places and onboarding:
+  `SavedPlaces.kt` (the list's rules), `Onboarding.kt` (who is asked
+  about location), `CoarseLocation.kt` (one coarse fix).
+- `app/src/main/java/.../settings/TswaPrefs.kt` — everything kept
+  between runs, in one SharedPreferences file (`tswa_settings`).
+- `app/src/main/java/.../temperature/` — logic with no UI: `Scale.kt`
+  (conversions, formatting, the tap's step order), `ScaleChoice.kt`
+  (switching scales on and off) and `Verdicts.kt`
+  (verdicts, landmarks, presets). Tested by `app/src/test/`.
+- `app/src/main/res/drawable/ic_tab_*.xml` — tab icons, drawn from the
+  web UI's glyphs.
+
+## The old web UI
+Up to v0.5.1 the whole app was one web page in a WebView. It is the
+reference for the native rewrite (verdict texts, landmarks, conversion
+maths) and is kept in git history, not in the build:
+
+```
+git show b4dcfdd:app/src/main/assets/www/index.html
+```
+
+Screenshots of it running are outside the repo, in
+`~/work/rob/tswa/TSWA-rewrite-screenshots/pre/` on Rob's machine.
+
+## Testing on an emulator
+Some things cannot be tried on a phone that is in daily use: onboarding
+only runs on a fresh install or after every saved place is deleted. An
+emulator is the safe place for those (set up 2026-11-23 for mg #899):
+
+```
+SDK=~/Android/Sdk
+$SDK/cmdline-tools/latest/bin/sdkmanager "emulator" "system-images;android-34;google_apis;x86_64"
+$SDK/cmdline-tools/latest/bin/avdmanager create avd -n tswa-test \
+  -k "system-images;android-34;google_apis;x86_64" -d pixel_7a
+$SDK/emulator/emulator -avd tswa-test -no-window -no-audio -no-snapshot &
+ANDROID_SERIAL=emulator-5554 tools/deploy-to-phone.sh
+```
+
+With the phone also connected, set `ANDROID_SERIAL` on every command.
+`adb -s emulator-5554 shell pm clear com.robnugen.tswa` gives a fresh
+install, on the emulator only.
+
+The emulator has no network location, so a coarse location request is
+never answered there. Give it mock providers instead:
+
+```
+E="adb -s emulator-5554"
+$E shell appops set 2000 android:mock_location allow
+for p in fused network; do
+  $E shell cmd location providers add-test-provider $p
+  $E shell cmd location providers set-test-provider-enabled $p true
+  $E shell cmd location providers set-test-provider-location $p --location 35.6895,139.6917
+done
+```
+

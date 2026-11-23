@@ -11,8 +11,8 @@ segments) lives in `app/build.gradle.kts` as `tswaBaseVersionName`; the
 workflow appends the GitHub Actions run number and passes the full
 string to Gradle as the `tswaVersionName` property, so the four-part
 string is the versionName inside the binary itself, not just a label.
-It is also stamped into the app page footer and used as the release
-tag. One version, seen everywhere: Rob's rule is that the version
+The app shows it in its header (read from `BuildConfig.VERSION_NAME`)
+and it is used as the release tag. One version, seen everywhere: Rob's rule is that the version
 visible in the app and the version visible on the Play Store must be
 the same version, and since 0.3.2 they are, because the Play Store
 shows the binary's versionName.

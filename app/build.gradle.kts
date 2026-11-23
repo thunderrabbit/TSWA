@@ -1,13 +1,14 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+    id("org.jetbrains.kotlin.plugin.serialization")
 }
 
 // The base version (MAJOR.MINOR.PATCH; see docs/VERSIONING.md). CI passes
 // tswaVersionName with its run number appended, so the versionName inside
 // the binary, the version shown in the app and the Play Store listing are
 // one and the same string.
-val tswaBaseVersionName = "0.5.1"
+val tswaBaseVersionName = "0.5.10"
 
 android {
     namespace = "com.robnugen.tswa"
@@ -56,4 +57,37 @@ android {
     kotlinOptions {
         jvmTarget = "17"
     }
+    buildFeatures {
+        compose = true
+        // BuildConfig.VERSION_NAME is what the header shows.
+        buildConfig = true
+    }
+    composeOptions {
+        // The Compose compiler release that matches Kotlin 1.9.24.
+        kotlinCompilerExtensionVersion = "1.5.14"
+    }
+}
+
+dependencies {
+    // The newest Compose BOM that still builds against compileSdk 34.
+    val composeBom = platform("androidx.compose:compose-bom:2024.06.00")
+    implementation(composeBom)
+    implementation("androidx.activity:activity-compose:1.9.0")
+    // LocationManagerCompat for onboarding's one coarse fix (already a
+    // transitive dependency of activity; named here because we use it).
+    implementation("androidx.core:core:1.13.1")
+    implementation("androidx.compose.ui:ui")
+    implementation("androidx.compose.foundation:foundation")
+    implementation("androidx.compose.material3:material3")
+
+    // Weather: JSON parsing and fetching off the main thread. The
+    // newest releases built for Kotlin 1.9.
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+
+    // Drag-to-sort for the saved places (Calvin Liang's reorderable).
+    // 2.1.1 is the last release built for Kotlin 1.9 and Compose 1.6.
+    implementation("sh.calvin.reorderable:reorderable:2.1.1")
+
+    testImplementation("junit:junit:4.13.2")
 }
