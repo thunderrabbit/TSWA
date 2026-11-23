@@ -27,6 +27,13 @@ wrapper, run `gradle wrapper` once and use `./gradlew` from then on.
   tab bar, footer), `AppState.kt` (state shared by every page, such as
   the scale shown), `ConverterPage.kt`, `SettingsPage.kt`, `Card.kt`,
   `Tab.kt`, `TswaColors.kt`, `TswaTheme.kt`.
+- `app/src/main/java/.../weather/` — the weather data: `OpenMeteo.kt`
+  (the fetch; it sends its own User-Agent because Open-Meteo refuses
+  Android's default one), `Forecast.kt` (the parsed response),
+  `WeatherCache.kt` (last good forecast in `weather_cache.json`),
+  `WeatherController.kt` (what the app shows and whether it is fresh),
+  `Wmo.kt`, `Place.kt`. Tests use a saved response in
+  `app/src/test/resources/`.
 - `app/src/main/java/.../settings/TswaPrefs.kt` — everything kept
   between runs, in one SharedPreferences file (`tswa_settings`).
 - `app/src/main/java/.../temperature/` — logic with no UI: `Scale.kt`
