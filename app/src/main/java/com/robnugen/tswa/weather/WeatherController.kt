@@ -23,6 +23,8 @@ class WeatherController(
     private val cache: WeatherCache,
     private val fetch: suspend (Place) -> String = OpenMeteo::fetchForecast,
     private val clock: () -> Long = System::currentTimeMillis,
+    // Told why a fetch failed (the app writes it to the system log).
+    private val onFailure: (Exception) -> Unit = {},
 ) {
     var weather by mutableStateOf(cache.load())
         private set
@@ -38,9 +40,11 @@ class WeatherController(
                 weather = fresh
                 cache.save(fresh)
                 WeatherStatus.Fresh
-            } catch (ignoredUnreachable: IOException) {
+            } catch (unreachable: IOException) {
+                onFailure(unreachable)
                 WeatherStatus.Offline // no network: keep showing the last good data
-            } catch (ignoredGarbled: SerializationException) {
+            } catch (garbled: SerializationException) {
+                onFailure(garbled)
                 WeatherStatus.Offline // a reply we cannot read: same as no reply
             }
     }
