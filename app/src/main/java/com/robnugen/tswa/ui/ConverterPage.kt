@@ -37,6 +37,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -125,11 +126,15 @@ private fun BigNumber(
 ) {
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
-    val widthSp = LocalConfiguration.current.screenWidthDp * BIG_NUMBER_WIDTH_SHARE
+    // Sized from the screen's width in dp, so a large font setting cannot
+    // push the number past the screen edges.
+    val share = LocalConfiguration.current.screenWidthDp * BIG_NUMBER_WIDTH_SHARE
+    val width = share.coerceIn(BIG_NUMBER_MIN_SP, BIG_NUMBER_MAX_SP)
+    val size = with(LocalDensity.current) { width.dp.toSp() }
     Text(
         text,
         color = if (pressed) TswaColors.Amber else TswaColors.Text,
-        fontSize = widthSp.coerceIn(BIG_NUMBER_MIN_SP, BIG_NUMBER_MAX_SP).sp,
+        fontSize = size,
         fontWeight = FontWeight.Bold,
         textAlign = TextAlign.Center,
         maxLines = 1,

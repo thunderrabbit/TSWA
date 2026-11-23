@@ -16,7 +16,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -115,7 +118,10 @@ private fun HeroNumber(
 ) {
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
-    val size = (LocalConfiguration.current.screenWidthDp * HERO_WIDTH_SHARE).coerceIn(HERO_MIN_SP, HERO_MAX_SP)
+    // Sized from the screen's width in dp, so a large font setting cannot
+    // push the number past the screen edges; it is already as big as fits.
+    val width = (LocalConfiguration.current.screenWidthDp * HERO_WIDTH_SHARE).coerceIn(HERO_MIN_SP, HERO_MAX_SP)
+    val size = with(LocalDensity.current) { width.dp.toSp().value }
     val unitStyle =
         SpanStyle(
             fontSize = (size * HERO_UNIT_SHARE).sp,
@@ -134,14 +140,17 @@ private fun HeroNumber(
         maxLines = 1,
         softWrap = false,
         modifier =
-            Modifier.clickable(
-                interactionSource = interaction,
-                indication = null,
-                enabled = celsius != null,
-                role = Role.Button,
-                onClickLabel = "Step to the next temperature scale",
-                onClick = control.onStep,
-            ),
+            Modifier
+                .clickable(
+                    interactionSource = interaction,
+                    indication = null,
+                    enabled = celsius != null,
+                    role = Role.Button,
+                    onClickLabel = "Step to the next temperature scale",
+                    onClick = control.onStep,
+                ).semantics {
+                    if (celsius != null) contentDescription = spokenTemperature(celsius, control.scale, "Now")
+                },
     )
 }
 

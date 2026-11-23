@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.HorizontalDivider
@@ -60,12 +61,12 @@ fun Hourly(
         WeatherView.hours(forecast).forEachIndexed { i, hour ->
             Column(
                 Modifier
-                    .width(62.dp)
+                    .widthIn(min = 62.dp)
                     .background(if (i == 0) TswaColors.Card else Color.Transparent, RoundedCornerShape(12.dp))
                     .padding(vertical = 6.dp, horizontal = 2.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                Text(hour.label, color = TswaColors.Muted, fontSize = 12.sp)
+                Text(hour.label, color = TswaColors.Muted, fontSize = 12.sp, maxLines = 1, softWrap = false)
                 GlyphIcon(hour.glyph, size = 22, modifier = Modifier.padding(top = 3.dp))
                 Temperature(hour.temperatureC, control, Modifier.padding(top = 3.dp), style = hourTempStyle)
                 Text(
@@ -108,11 +109,13 @@ fun TenDays(
                         rainLabel(day.rainPercent),
                         color = TswaColors.Cyan,
                         fontSize = 12.sp,
-                        modifier = Modifier.width(36.dp),
+                        maxLines = 1,
+                        softWrap = false,
+                        modifier = Modifier.widthIn(min = 36.dp),
                     )
-                    Temperature(day.lowC, control, Modifier.width(64.dp), style = dayLowStyle)
+                    Temperature(day.lowC, control, Modifier.widthIn(min = 64.dp), style = dayLowStyle)
                     RangeBar(day.barStart, day.barWidth)
-                    Temperature(day.highC, control, Modifier.width(64.dp), style = dayHighStyle)
+                    Temperature(day.highC, control, Modifier.widthIn(min = 64.dp), style = dayHighStyle)
                 }
             }
         }

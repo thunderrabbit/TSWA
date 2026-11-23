@@ -6,8 +6,8 @@ import com.robnugen.tswa.weather.Place
 object Onboarding {
     // Ask when the person has never been asked and has no places yet (a
     // fresh install), or when they emptied their list to be asked again.
-    // Someone who already has saved places (Rob, coming from the WebView
-    // version) was onboarded there and is not asked.
+    // Someone who already has saved places but no flag (they came over
+    // from the WebView version, mg #897) was onboarded there and is not asked.
     fun needed(
         onboarded: Boolean?,
         savedIsEmpty: Boolean,

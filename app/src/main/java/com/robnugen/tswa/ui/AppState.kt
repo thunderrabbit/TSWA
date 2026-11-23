@@ -4,7 +4,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import com.robnugen.tswa.places.LegacyStorage
 import com.robnugen.tswa.settings.TswaPrefs
 import com.robnugen.tswa.temperature.Scale
 import com.robnugen.tswa.temperature.ScaleChoice
@@ -19,6 +18,15 @@ class AppState(
 ) {
     var enabledScales by mutableStateOf(prefs.enabledScales)
         private set
+
+    // The tab on screen; the app reopens on it.
+    var tab by mutableStateOf(Tab.entries.firstOrNull { it.name == prefs.lastTab } ?: Tab.Weather)
+        private set
+
+    fun showTab(next: Tab) {
+        tab = next
+        prefs.lastTab = next.name
+    }
 
     var scale by mutableStateOf(ScaleChoice.shown(prefs.shownScale, prefs.enabledScales))
         private set
@@ -46,25 +54,6 @@ class AppState(
 
     // The saved places and what can be done to them.
     val places = PlacesState(prefs)
-
-    // Once ever: bring over the WebView version's saved places (and its
-    // scale choice, if none has been made here), but only into an empty
-    // list. [read] returns null when the old storage could not be read;
-    // then nothing is marked done and the next start tries again.
-    suspend fun importLegacyOnce(read: suspend () -> Map<String, String?>?) {
-        val needed = !prefs.legacyImportDone && places.saved.isEmpty()
-        val found = if (needed) read() else emptyMap()
-        if (found != null) {
-            places.importOld(LegacyStorage.places(found["tswa-places"]))
-            val scales = LegacyStorage.scales(found["tswa-scales"])
-            if (scales != null && !prefs.hasEnabledScales) {
-                enabledScales = scales
-                prefs.enabledScales = scales
-                scale = ScaleChoice.shown(scale, scales)
-            }
-            prefs.legacyImportDone = true
-        }
-    }
 
     // A Settings switch. If the shown scale goes off, show the first one on.
     fun toggleScale(target: Scale) {

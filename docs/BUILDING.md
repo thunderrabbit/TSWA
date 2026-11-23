@@ -42,11 +42,9 @@ wrapper, run `gradle wrapper` once and use `./gradlew` from then on.
   unit conversions), `Geocoding.kt` (place search), `Wmo.kt`,
   `Place.kt`. Tests use a saved response in
   `app/src/test/resources/`.
-- `app/src/main/java/.../places/` — saved places: `SavedPlaces.kt` (the
-  list's rules, and `LegacyStorage` for the old format) and
-  `LegacyReader.kt` (the one-time, read-only import from the WebView version's localStorage, through
-  `app/src/main/assets/www/read-old-storage.html`; that page must stay
-  in `www/` so it sees the old app's storage).
+- `app/src/main/java/.../places/` — saved places and onboarding:
+  `SavedPlaces.kt` (the list's rules), `Onboarding.kt` (who is asked
+  about location), `CoarseLocation.kt` (one coarse fix).
 - `app/src/main/java/.../settings/TswaPrefs.kt` — everything kept
   between runs, in one SharedPreferences file (`tswa_settings`).
 - `app/src/main/java/.../temperature/` — logic with no UI: `Scale.kt`

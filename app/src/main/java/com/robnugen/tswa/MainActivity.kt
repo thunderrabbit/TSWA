@@ -15,9 +15,8 @@ import java.io.File
 private const val WEATHER_CACHE_FILE = "weather_cache.json"
 private const val LOG_TAG = "TSWA"
 
-// TSWA's native UI (Jetpack Compose; see the README for why). Rob's
-// saved places from the old WebView version are still in the app's
-// data directory, untouched, until the saved-places work migrates them.
+// TSWA's native UI (Jetpack Compose; see the README for why). Start-up
+// work (onboarding, the first fetch) lives in ui/StartUp.kt.
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
