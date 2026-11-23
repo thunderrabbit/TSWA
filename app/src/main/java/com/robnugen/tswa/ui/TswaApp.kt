@@ -42,18 +42,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.robnugen.tswa.BuildConfig
 import com.robnugen.tswa.R
-import com.robnugen.tswa.temperature.Scale
 
 // Where the converter starts when there is no weather to seed it.
 private const val DEFAULT_CONVERTER_C = 22.2
 
 @Composable
-fun TswaApp() {
+fun TswaApp(state: AppState) {
     var current by rememberSaveable { mutableStateOf(Tab.Weather) }
-    // One scale for the whole app: stepping it on one page steps it on
-    // every page.
-    var scale by rememberSaveable { mutableStateOf(Scale.C) }
-    val enabled = Scale.DEFAULT_ENABLED
     var converterC by rememberSaveable { mutableDoubleStateOf(DEFAULT_CONVERTER_C) }
     // Each tab keeps its own scroll position, as the web page did.
     val scrolls = Tab.entries.associateWith { rememberScrollState() }
@@ -75,11 +70,15 @@ fun TswaApp() {
                 Tab.Converter -> {
                     ConverterPage(
                         celsius = converterC,
-                        scale = scale,
-                        enabled = enabled,
-                        onStep = { scale = Scale.next(scale, enabled) },
+                        scale = state.scale,
+                        enabled = state.enabledScales,
+                        onStep = state::stepScale,
                         onSet = { converterC = it },
                     )
+                }
+
+                Tab.Settings -> {
+                    SettingsPage(enabled = state.enabledScales, onToggle = state::toggleScale)
                 }
 
                 else -> {
