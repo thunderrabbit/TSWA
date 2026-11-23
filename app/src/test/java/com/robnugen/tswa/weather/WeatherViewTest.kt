@@ -22,6 +22,31 @@ class WeatherViewTest {
     }
 
     @Test
+    fun hoursAfterSunsetShowNightIcons() {
+        // Clear sky all day; dark from 20:00 (index 20) on, light again from 06:00 next day.
+        val n = sample.hourly.time.size
+        val clear = sample.hourly.copy(weatherCode = List(n) { 0 }, isDay = List(n) { i -> if (i % 24 in 6..19) 1 else 0 })
+        val hours = WeatherView.hours(sample.copy(hourly = clear))
+        assertEquals(Glyph.Sun, hours[0].glyph) // Now, 11:15, current.is_day = 1
+        assertEquals(Glyph.Sun, hours[8].glyph) // 19:00
+        assertEquals(Glyph.Moon, hours[9].glyph) // 20:00
+        assertEquals(Glyph.Moon, hours[11].glyph) // 22:00
+    }
+
+    @Test
+    fun partlyCloudyNightsGetTheirOwnIcon() {
+        assertEquals(Glyph.Partly, Glyph.forCode(2, isDay = true))
+        assertEquals(Glyph.PartlyNight, Glyph.forCode(2, isDay = false))
+    }
+
+    @Test
+    fun aCachedForecastWithoutIsDayShowsDayIcons() {
+        val n = sample.hourly.time.size
+        val old = sample.hourly.copy(weatherCode = List(n) { 0 }, isDay = emptyList())
+        assertTrue(WeatherView.hours(sample.copy(hourly = old)).all { it.glyph == Glyph.Sun })
+    }
+
+    @Test
     fun hourlyFallsBackToTheFirstHourWhenTheClockDoesNotMatch() {
         val odd = sample.copy(current = sample.current.copy(time = "1999-01-01T00:00"))
         assertEquals(0, WeatherView.currentHourIndex(odd))

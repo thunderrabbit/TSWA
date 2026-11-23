@@ -166,6 +166,7 @@ private fun Glyph.drawable(): Int =
         Glyph.Sun -> R.drawable.wx_sun
         Glyph.Moon -> R.drawable.wx_moon
         Glyph.Partly -> R.drawable.wx_partly
+        Glyph.PartlyNight -> R.drawable.wx_partly_night
         Glyph.Cloud -> R.drawable.wx_cloud
         Glyph.Fog -> R.drawable.wx_fog
         Glyph.Drizzle -> R.drawable.wx_drizzle
