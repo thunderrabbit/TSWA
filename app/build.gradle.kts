@@ -82,5 +82,9 @@ dependencies {
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
 
+    // Drag-to-sort for the saved places (Calvin Liang's reorderable).
+    // 2.1.1 is the last release built for Kotlin 1.9 and Compose 1.6.
+    implementation("sh.calvin.reorderable:reorderable:2.1.1")
+
     testImplementation("junit:junit:4.13.2")
 }
