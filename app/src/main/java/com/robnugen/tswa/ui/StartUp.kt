@@ -5,13 +5,20 @@ import android.util.Log
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import com.robnugen.tswa.places.CoarseLocation
 import com.robnugen.tswa.places.Onboarding
 import com.robnugen.tswa.weather.Place
+import com.robnugen.tswa.weather.WeatherController
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.launch
 
 // What happens once when the app opens: either ask about location (first
 // run, or after the saved list was emptied; mg #899) or refresh the last
@@ -52,5 +59,21 @@ fun StartUp(state: AppState) {
             // screen, and this refreshes it (Adelaide when nothing is cached).
             state.weather.load(state.weather.currentPlace)
         }
+    }
+}
+
+// Returning to the app (launcher, recents, screen on) reloads the weather
+// if it has gone stale; a cold start is handled by StartUp (mg #908).
+@Composable
+fun RefreshOnReturn(weather: WeatherController) {
+    val owner = LocalLifecycleOwner.current
+    val scope = rememberCoroutineScope()
+    DisposableEffect(owner) {
+        val observer =
+            LifecycleEventObserver { _, event ->
+                if (event == Lifecycle.Event.ON_RESUME) scope.launch { weather.refreshIfStale() }
+            }
+        owner.lifecycle.addObserver(observer)
+        onDispose { owner.lifecycle.removeObserver(observer) }
     }
 }

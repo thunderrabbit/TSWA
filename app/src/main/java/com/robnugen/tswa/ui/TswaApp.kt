@@ -56,6 +56,7 @@ fun TswaApp(state: AppState) {
     // Each tab keeps its own scroll position, as the web page did.
     val scrolls = Tab.entries.associateWith { rememberScrollState() }
     StartUp(state)
+    RefreshOnReturn(state.weather)
     // The converter starts from the weather's temperature.
     val currentC =
         state.weather.weather

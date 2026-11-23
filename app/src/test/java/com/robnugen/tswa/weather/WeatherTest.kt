@@ -106,4 +106,54 @@ class WeatherTest {
             assertEquals(WeatherStatus.Offline, controller.status)
             assertNull(controller.weather)
         }
+
+    @Test
+    fun comingBackRefetchesOnlyStaleWeather() =
+        runBlocking {
+            var now = 1_000_000L
+            var fetches = 0
+            val c =
+                WeatherController(
+                    WeatherCache(tmp.root.resolve("stale.json")),
+                    fetch = {
+                        fetches++
+                        sample
+                    },
+                    clock = { now },
+                )
+            c.load(Place.ADELAIDE)
+            assertEquals(1, fetches)
+            now += 60_000L // back after a minute
+            c.refreshIfStale()
+            assertEquals(1, fetches)
+            now += WeatherController.STALE_AFTER_MILLIS // back after a long while
+            c.refreshIfStale()
+            assertEquals(2, fetches)
+            assertEquals(now, c.weather!!.fetchedAtMillis)
+        }
+
+    @Test
+    fun offlineComingBackTriesOnceAndKeepsTheOldData() =
+        runBlocking {
+            var now = 1_000_000L
+            var online = true
+            var fetches = 0
+            val c =
+                WeatherController(
+                    WeatherCache(tmp.root.resolve("off.json")),
+                    fetch = {
+                        fetches++
+                        if (!online) throw IOException("airplane mode")
+                        sample
+                    },
+                    clock = { now },
+                )
+            c.load(Place.ADELAIDE)
+            online = false
+            now += WeatherController.STALE_AFTER_MILLIS
+            c.refreshIfStale()
+            assertEquals(2, fetches)
+            assertEquals(WeatherStatus.Offline, c.status)
+            assertEquals(1_000_000L, c.weather!!.fetchedAtMillis)
+        }
 }
