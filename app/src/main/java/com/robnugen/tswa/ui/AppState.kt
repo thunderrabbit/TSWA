@@ -6,11 +6,13 @@ import androidx.compose.runtime.setValue
 import com.robnugen.tswa.settings.TswaPrefs
 import com.robnugen.tswa.temperature.Scale
 import com.robnugen.tswa.temperature.ScaleChoice
+import com.robnugen.tswa.weather.WeatherController
 
-// App-wide state that outlives a page: the scale shown everywhere and
-// the scales the tap visits. Every change is saved straight away.
+// App-wide state that outlives a page: the scale shown everywhere, the
+// scales the tap visits, and the weather. Every change is saved straight away.
 class AppState(
     private val prefs: TswaPrefs,
+    val weather: WeatherController,
 ) {
     var enabledScales by mutableStateOf(prefs.enabledScales)
         private set
