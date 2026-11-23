@@ -23,11 +23,13 @@ and the code. The launcher label is just "Two Skies".
 - **Onboarding**: on first run the app asks about using your location.
 
 ## Status
-TSWA is being rebuilt as a native Kotlin app (mg #876), one piece at a
-time. Up to v0.5.1 it was a WebView shell around one web page; that
-page now lives only in git history as the reference (see
-[docs/BUILDING.md](docs/BUILDING.md)). Right now the native app has the
-header and the three tabs, with the pages still empty.
+TSWA is a native Kotlin app. Up to v0.5.1 it was a WebView shell
+around one web page; the native rewrite (mg #876, November 2026) does
+everything that page did, plus a smooth drag sort for saved places. The
+web page lives on only in git history as the reference (see
+[docs/BUILDING.md](docs/BUILDING.md)). On first run of the native
+version, saved places and scale choices are brought over once from the
+WebView version's storage.
 
 ## UI toolkit: Jetpack Compose
 The native UI is written in Jetpack Compose with Material 3, chosen
