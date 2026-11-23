@@ -9,6 +9,7 @@ import com.robnugen.tswa.places.SavedPlaces
 import com.robnugen.tswa.settings.TswaPrefs
 import com.robnugen.tswa.temperature.Scale
 import com.robnugen.tswa.temperature.ScaleChoice
+import com.robnugen.tswa.weather.Place
 import com.robnugen.tswa.weather.WeatherController
 
 // App-wide state that outlives a page: the scale shown everywhere, the
@@ -52,6 +53,42 @@ class AppState(
     fun saveCurrentPlace() {
         savedPlaces = SavedPlaces.saveOnTop(savedPlaces, weather.currentPlace)
         prefs.savedPlaces = savedPlaces
+    }
+
+    // A drop at the end of a drag; the chips follow at once.
+    fun movePlace(
+        from: Int,
+        to: Int,
+    ) {
+        savedPlaces = SavedPlaces.move(savedPlaces, from, to)
+        prefs.savedPlaces = savedPlaces
+    }
+
+    // The last place swiped away and where it was, for Undo.
+    var lastDeleted by mutableStateOf<Pair<Int, Place>?>(null)
+        private set
+
+    // Swipe right to delete. Emptying the list sends the person back
+    // through onboarding on the next launch.
+    fun deletePlace(place: Place) {
+        val index = savedPlaces.indexOfFirst { SavedPlaces.same(it, place) }
+        if (index < 0) return
+        savedPlaces = savedPlaces.filterIndexed { i, _ -> i != index }
+        prefs.savedPlaces = savedPlaces
+        if (savedPlaces.isEmpty()) prefs.onboarded = false
+        lastDeleted = index to place
+    }
+
+    fun undoDelete() {
+        val (index, place) = lastDeleted ?: return
+        savedPlaces = SavedPlaces.restore(savedPlaces, place, index)
+        prefs.savedPlaces = savedPlaces
+        if (prefs.onboarded == false) prefs.onboarded = true
+        lastDeleted = null
+    }
+
+    fun forgetDeleted() {
+        lastDeleted = null
     }
 
     // Once ever: bring over the WebView version's saved places (and its

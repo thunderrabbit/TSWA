@@ -34,6 +34,30 @@ object SavedPlaces {
         place: Place,
     ): List<Place> = if (isSaved(places, place)) places else listOf(place) + places
 
+    // A drag drops the place from [from] into position [to].
+    fun move(
+        places: List<Place>,
+        from: Int,
+        to: Int,
+    ): List<Place> {
+        if (from !in places.indices || to !in places.indices) return places
+        val moved = places.toMutableList()
+        moved.add(to, moved.removeAt(from))
+        return moved
+    }
+
+    // Undo puts a deleted place back where it was (or at the end).
+    fun restore(
+        places: List<Place>,
+        place: Place,
+        index: Int,
+    ): List<Place> =
+        if (isSaved(places, place)) {
+            places
+        } else {
+            places.toMutableList().apply { add(index.coerceIn(0, size), place) }
+        }
+
     fun encode(places: List<Place>): String = json.encodeToString(listSerializer, places)
 
     fun decode(text: String): List<Place> =

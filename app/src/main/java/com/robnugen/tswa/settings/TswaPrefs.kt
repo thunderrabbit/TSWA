@@ -52,6 +52,19 @@ class TswaPrefs(
             prefs.edit().putBoolean(KEY_LEGACY_IMPORT_DONE, value).apply()
         }
 
+    // False until the first-run location question has been asked, and
+    // false again once every saved place is deleted (that is how the
+    // person gets back into onboarding). Null when never recorded.
+    var onboarded: Boolean?
+        get() = if (prefs.contains(KEY_ONBOARDED)) prefs.getBoolean(KEY_ONBOARDED, false) else null
+        set(value) {
+            if (value == null) {
+                prefs.edit().remove(KEY_ONBOARDED).apply()
+            } else {
+                prefs.edit().putBoolean(KEY_ONBOARDED, value).apply()
+            }
+        }
+
     private fun scaleNamed(name: String): Scale? = Scale.entries.firstOrNull { it.name == name }
 
     private companion object {
@@ -60,5 +73,6 @@ class TswaPrefs(
         const val KEY_SHOWN_SCALE = "shown_scale"
         const val KEY_SAVED_PLACES = "saved_places"
         const val KEY_LEGACY_IMPORT_DONE = "legacy_import_done"
+        const val KEY_ONBOARDED = "onboarded"
     }
 }
