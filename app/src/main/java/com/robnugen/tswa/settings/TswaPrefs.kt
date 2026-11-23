@@ -6,8 +6,6 @@ import com.robnugen.tswa.temperature.Scale
 import com.robnugen.tswa.weather.Place
 
 // Every setting TSWA keeps between runs, in one SharedPreferences file.
-// (The old WebView version's localStorage lives elsewhere in the app's
-// data directory and is not touched here.)
 class TswaPrefs(
     context: Context,
 ) {
@@ -40,23 +38,11 @@ class TswaPrefs(
             prefs.edit().putString(KEY_LAST_TAB, value).apply()
         }
 
-    // Whether the person (or the import) has chosen scales yet.
-    val hasEnabledScales: Boolean
-        get() = prefs.contains(KEY_ENABLED_SCALES)
-
     // The saved places, in display order.
     var savedPlaces: List<Place>
         get() = prefs.getString(KEY_SAVED_PLACES, null)?.let(SavedPlaces::decode).orEmpty()
         set(value) {
             prefs.edit().putString(KEY_SAVED_PLACES, SavedPlaces.encode(value)).apply()
-        }
-
-    // Set once the old WebView version's storage has been read, so the
-    // import never runs twice (not even after every place is deleted).
-    var legacyImportDone: Boolean
-        get() = prefs.getBoolean(KEY_LEGACY_IMPORT_DONE, false)
-        set(value) {
-            prefs.edit().putBoolean(KEY_LEGACY_IMPORT_DONE, value).apply()
         }
 
     // False until the first-run location question has been asked, and
@@ -79,7 +65,6 @@ class TswaPrefs(
         const val KEY_ENABLED_SCALES = "enabled_scales"
         const val KEY_SHOWN_SCALE = "shown_scale"
         const val KEY_SAVED_PLACES = "saved_places"
-        const val KEY_LEGACY_IMPORT_DONE = "legacy_import_done"
         const val KEY_ONBOARDED = "onboarded"
         const val KEY_LAST_TAB = "last_tab"
     }

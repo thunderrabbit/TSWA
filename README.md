@@ -27,9 +27,9 @@ TSWA is a native Kotlin app. Up to v0.5.1 it was a WebView shell
 around one web page; the native rewrite (mg #876, November 2026) does
 everything that page did, plus a smooth drag sort for saved places. The
 web page lives on only in git history as the reference (see
-[docs/BUILDING.md](docs/BUILDING.md)). On first run of the native
-version, saved places and scale choices are brought over once from the
-WebView version's storage.
+[docs/BUILDING.md](docs/BUILDING.md)). The native version brought
+saved places over from the WebView version's storage once; that import
+was removed after it had done its job (mg #900).
 
 ## UI toolkit: Jetpack Compose
 The native UI is written in Jetpack Compose with Material 3, chosen

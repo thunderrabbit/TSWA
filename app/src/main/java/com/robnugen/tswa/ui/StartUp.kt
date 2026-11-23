@@ -9,14 +9,13 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
 import androidx.compose.ui.platform.LocalContext
 import com.robnugen.tswa.places.CoarseLocation
-import com.robnugen.tswa.places.LegacyReader
 import com.robnugen.tswa.places.Onboarding
 import com.robnugen.tswa.weather.Place
 import kotlinx.coroutines.CompletableDeferred
 
-// What happens once when the app opens: bring over the WebView version's
-// places (mg #897), then either ask about location (first run, or after
-// the saved list was emptied; mg #899) or refresh the last place shown.
+// What happens once when the app opens: either ask about location (first
+// run, or after the saved list was emptied; mg #899) or refresh the last
+// place shown.
 @Composable
 fun StartUp(state: AppState) {
     val context = LocalContext.current
@@ -29,12 +28,6 @@ fun StartUp(state: AppState) {
             answer.complete(granted)
         }
     LaunchedEffect(Unit) {
-        state.importLegacyOnce {
-            LegacyReader(context).read().also { found ->
-                val places = found?.get("tswa-places")
-                Log.i("TSWA", "Old WebView storage: ${found?.keys}; tswa-places ${places?.length ?: 0} chars")
-            }
-        }
         if (state.places.onboardingNeeded()) {
             val allowed =
                 location.permitted() ||

@@ -56,11 +56,6 @@ class PlacesState(
         lastDeleted = null
     }
 
-    // The one-time import from the WebView version fills an empty list.
-    fun importOld(places: List<Place>) {
-        if (saved.isEmpty() && places.isNotEmpty()) keep(places)
-    }
-
     // Whether to ask about location at this launch (mg #899).
     fun onboardingNeeded(): Boolean = Onboarding.needed(prefs.onboarded, saved.isEmpty())
 

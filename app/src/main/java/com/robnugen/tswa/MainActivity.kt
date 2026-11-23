@@ -16,8 +16,7 @@ private const val WEATHER_CACHE_FILE = "weather_cache.json"
 private const val LOG_TAG = "TSWA"
 
 // TSWA's native UI (Jetpack Compose; see the README for why). Start-up
-// work (the one-time import from the WebView version, onboarding, the
-// first fetch) lives in ui/StartUp.kt.
+// work (onboarding, the first fetch) lives in ui/StartUp.kt.
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
