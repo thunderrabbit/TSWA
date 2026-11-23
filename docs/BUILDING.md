@@ -24,11 +24,14 @@ wrapper, run `gradle wrapper` once and use `./gradlew` from then on.
 ## Layout
 - `app/src/main/java/.../MainActivity.kt` — starts the Compose UI.
 - `app/src/main/java/.../ui/` — the UI: `TswaApp.kt` (header, pages,
-  tab bar, footer, and the app-wide state such as the current scale),
-  `ConverterPage.kt`, `Card.kt`, `Tab.kt`, `TswaColors.kt`,
-  `TswaTheme.kt`.
+  tab bar, footer), `AppState.kt` (state shared by every page, such as
+  the scale shown), `ConverterPage.kt`, `SettingsPage.kt`, `Card.kt`,
+  `Tab.kt`, `TswaColors.kt`, `TswaTheme.kt`.
+- `app/src/main/java/.../settings/TswaPrefs.kt` — everything kept
+  between runs, in one SharedPreferences file (`tswa_settings`).
 - `app/src/main/java/.../temperature/` — logic with no UI: `Scale.kt`
-  (conversions, formatting, the tap's step order) and `Verdicts.kt`
+  (conversions, formatting, the tap's step order), `ScaleChoice.kt`
+  (switching scales on and off) and `Verdicts.kt`
   (verdicts, landmarks, presets). Tested by `app/src/test/`.
 - `app/src/main/res/drawable/ic_tab_*.xml` — tab icons, drawn from the
   web UI's glyphs.
