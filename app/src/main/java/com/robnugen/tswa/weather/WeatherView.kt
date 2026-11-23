@@ -16,6 +16,7 @@ enum class Glyph(
     Sun(Tone.Sun),
     Moon(Tone.Cloud),
     Partly(Tone.Sun),
+    PartlyNight(Tone.Cloud),
     Cloud(Tone.Cloud),
     Fog(Tone.Cloud),
     Drizzle(Tone.Rain),
@@ -33,7 +34,7 @@ enum class Glyph(
         ): Glyph =
             when (code) {
                 0 -> if (isDay) Sun else Moon
-                1, 2 -> Partly
+                1, 2 -> if (isDay) Partly else PartlyNight
                 3 -> Cloud
                 45, 48 -> Fog
                 in 51..55 -> Drizzle
@@ -91,13 +92,25 @@ object WeatherView {
             val now = i == start
             HourSlot(
                 label = if (now) "Now" else h.time[i].substring(CLOCK_START, CLOCK_END),
-                // Only "Now" knows night from day; the rest show day icons.
-                glyph = Glyph.forCode(h.weatherCode.getOrNull(i), isDay = !now || forecast.current.isDay == 1),
+                glyph = Glyph.forCode(h.weatherCode.getOrNull(i), isDay = isDay(forecast, i, now)),
                 temperatureC = h.temperatureC.getOrNull(i),
                 rainPercent = h.rainPercent.getOrNull(i),
             )
         }
     }
+
+    // "Now" goes by the current conditions; later hours by their own
+    // is_day, or by day when a cached forecast from before mg #907 has none.
+    private fun isDay(
+        forecast: Forecast,
+        i: Int,
+        now: Boolean,
+    ): Boolean =
+        if (now) {
+            forecast.current.isDay == 1
+        } else {
+            forecast.hourly.isDay.getOrNull(i) != 0
+        }
 
     fun days(
         forecast: Forecast,

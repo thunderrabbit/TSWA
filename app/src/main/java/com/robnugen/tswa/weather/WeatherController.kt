@@ -66,6 +66,19 @@ class WeatherController(
         choices = emptyList()
     }
 
+    // Coming back to an app Android kept alive shows what was loaded
+    // then: fetch again if that is older than [STALE_AFTER_MILLIS]. Not
+    // while a fetch is under way (a cold start is already loading).
+    suspend fun refreshIfStale() {
+        if (status == WeatherStatus.Loading) return
+        val age = weather?.let { clock() - it.fetchedAtMillis }
+        if (age == null || age >= STALE_AFTER_MILLIS) load(currentPlace)
+    }
+
+    companion object {
+        const val STALE_AFTER_MILLIS = 15 * 60 * 1000L
+    }
+
     // Fetch the weather for [place]. [rename] may name the place from the
     // forecast itself (onboarding names the person's location that way).
     suspend fun load(
