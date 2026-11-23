@@ -8,7 +8,7 @@ plugins {
 // tswaVersionName with its run number appended, so the versionName inside
 // the binary, the version shown in the app and the Play Store listing are
 // one and the same string.
-val tswaBaseVersionName = "0.5.5"
+val tswaBaseVersionName = "0.5.6"
 
 android {
     namespace = "com.robnugen.tswa"
