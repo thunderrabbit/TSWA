@@ -210,7 +210,7 @@ object Verdicts {
             Heat(
                 fromC = 9_666.85,
                 "The surface of Sirius",
-                "Sirius, the brightest star in the night sky, is about 9,940 K: nearly twice the Sun. " +
+                "Sirius, the brightest star in the night sky, is about 9,940 K, 1.7 times the Sun. " +
                     "That's why it shines blue-white.",
             ),
             Heat(
@@ -226,7 +226,7 @@ object Verdicts {
             Heat(
                 fromC = 39_726.85,
                 "A blue giant star",
-                "The hottest blue stars, like Zeta Puppis, have surfaces around 40,000 K.",
+                "Some of the hottest blue stars, like Zeta Puppis, have surfaces around 40,000 K.",
             ),
             Heat(
                 fromC = 99_726.85,
@@ -251,9 +251,9 @@ object Verdicts {
             ),
             Heat(
                 fromC = 100_000_000_000.0,
-                "A newborn pulsar",
+                "A newborn neutron star",
                 "When a giant star collapses into a neutron star, its insides hit about 100 billion K. " +
-                    "It cools fast, but keeps spinning and flashing for millions of years.",
+                    "It cools fast; the ones that become pulsars spin and flash for millions of years.",
             ),
             Heat(
                 fromC = 10_000_000_000_000.0,
@@ -321,7 +321,7 @@ object Verdicts {
             Landmark("Sun's corona", celsius = 1_000_000.0),
             Landmark("Core of the Sun", celsius = 15_000_000.0),
             Landmark("Fusion reactor plasma", celsius = 100_000_000.0),
-            Landmark("Newborn pulsar", celsius = 100_000_000_000.0),
+            Landmark("Newborn neutron star", celsius = 100_000_000_000.0),
             Landmark("Quasar 3C 273", celsius = 10_000_000_000_000.0),
         )
 
