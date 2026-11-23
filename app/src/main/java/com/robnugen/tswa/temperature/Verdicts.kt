@@ -208,14 +208,59 @@ object Verdicts {
                 "The Sun's visible surface is about 5,500 C / 9,930 F (5,772 K).",
             ),
             Heat(
+                fromC = 9_666.85,
+                "The surface of Sirius",
+                "Sirius, the brightest star in the night sky, is about 9,940 K: nearly twice the Sun. " +
+                    "That's why it shines blue-white.",
+            ),
+            Heat(
+                fromC = 20_000.0,
+                "A plasma cutting torch",
+                "A plasma cutter's arc runs around 20,000 C / 36,000 F, hot enough to slice through steel.",
+            ),
+            Heat(
                 fromC = 29_726.85,
                 "A lightning bolt",
                 "A lightning channel reaches about 30,000 K, five times hotter than the Sun's surface.",
             ),
             Heat(
+                fromC = 39_726.85,
+                "A blue giant star",
+                "The hottest blue stars, like Zeta Puppis, have surfaces around 40,000 K.",
+            ),
+            Heat(
+                fromC = 99_726.85,
+                "The hottest white dwarfs",
+                "A dead star's leftover core can start out above 100,000 K, then cool for billions of years.",
+            ),
+            Heat(
+                fromC = 1_000_000.0,
+                "The Sun's corona",
+                "The Sun's outer atmosphere is 1 to 3 million C, hundreds of times hotter than its surface. " +
+                    "Nobody is sure why.",
+            ),
+            Heat(
                 fromC = 15_000_000.0,
                 "The core of the Sun",
-                "About 15 million C, where hydrogen fuses into helium. Hard to get hotter around here.",
+                "About 15 million C, where hydrogen fuses into helium.",
+            ),
+            Heat(
+                fromC = 100_000_000.0,
+                "Fusion reactor plasma",
+                "Tokamaks like Korea's KSTAR hold plasma at about 100 million C, far hotter than the Sun's core.",
+            ),
+            Heat(
+                fromC = 100_000_000_000.0,
+                "A newborn pulsar",
+                "When a giant star collapses into a neutron star, its insides hit about 100 billion K. " +
+                    "It cools fast, but keeps spinning and flashing for millions of years.",
+            ),
+            Heat(
+                fromC = 10_000_000_000_000.0,
+                "The quasar 3C 273",
+                "Radio telescopes clocked this quasar's jet at over 10 trillion K, " +
+                    "hotter than theory says it should be. " +
+                    "If you know of anything hotter, send a PR.",
             ),
         )
 
@@ -268,8 +313,16 @@ object Verdicts {
             Landmark("Boron melts", celsius = 2_076.0),
             Landmark("Tungsten melts", celsius = 3_422.0),
             Landmark("Surface of the Sun", celsius = 5_498.85),
+            Landmark("Surface of Sirius", celsius = 9_666.85),
+            Landmark("Plasma cutting torch", celsius = 20_000.0),
             Landmark("Lightning bolt", celsius = 29_726.85),
+            Landmark("Blue giant star", celsius = 39_726.85),
+            Landmark("Hottest white dwarfs", celsius = 99_726.85),
+            Landmark("Sun's corona", celsius = 1_000_000.0),
             Landmark("Core of the Sun", celsius = 15_000_000.0),
+            Landmark("Fusion reactor plasma", celsius = 100_000_000.0),
+            Landmark("Newborn pulsar", celsius = 100_000_000_000.0),
+            Landmark("Quasar 3C 273", celsius = 10_000_000_000_000.0),
         )
 
     val presets: List<Preset> =

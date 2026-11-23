@@ -100,6 +100,6 @@ class VerdictsTest {
     fun everyPresetIsInsidePhysics() {
         Verdicts.presets.forEach { assert(it.celsius >= Scale.ABSOLUTE_ZERO_C) }
         assertEquals(10, Verdicts.presets.size)
-        assertEquals(45, Verdicts.landmarks.size)
+        assertEquals(53, Verdicts.landmarks.size)
     }
 }
