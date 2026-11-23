@@ -1,6 +1,5 @@
 package com.robnugen.tswa.ui
 
-import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -37,7 +36,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -50,8 +48,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.robnugen.tswa.BuildConfig
 import com.robnugen.tswa.R
-import com.robnugen.tswa.places.LegacyReader
-import com.robnugen.tswa.weather.Place
 import kotlinx.coroutines.launch
 
 @Composable
@@ -59,19 +55,7 @@ fun TswaApp(state: AppState) {
     var current by rememberSaveable { mutableStateOf(Tab.Weather) }
     // Each tab keeps its own scroll position, as the web page did.
     val scrolls = Tab.entries.associateWith { rememberScrollState() }
-    // Fetch the weather once at start: Adelaide until saved places and
-    // onboarding (mg #897, #899) choose the place.
-    val context = LocalContext.current
-    LaunchedEffect(Unit) {
-        // The WebView version's saved places come over once (mg #897).
-        state.importLegacyOnce {
-            LegacyReader(context).read().also { found ->
-                val places = found?.get("tswa-places")
-                Log.i("TSWA", "Old WebView storage: ${found?.keys}; tswa-places ${places?.length ?: 0} chars")
-            }
-        }
-        state.weather.load(Place.ADELAIDE)
-    }
+    StartUp(state)
     // The converter starts from the weather's temperature.
     val currentC =
         state.weather.weather
@@ -81,12 +65,12 @@ fun TswaApp(state: AppState) {
     LaunchedEffect(currentC) { currentC?.let(state::seedConverter) }
     // A swiped-away place can be brought back for a few seconds.
     val snackbar = remember { SnackbarHostState() }
-    val deleted = state.lastDeleted
+    val deleted = state.places.lastDeleted
     LaunchedEffect(deleted) {
         if (deleted != null) {
             val name = deleted.second.shortName
             val answer = snackbar.showSnackbar("Deleted $name", "Undo", duration = SnackbarDuration.Short)
-            if (answer == SnackbarResult.ActionPerformed) state.undoDelete() else state.forgetDeleted()
+            if (answer == SnackbarResult.ActionPerformed) state.places.undoDelete() else state.places.forgetDeleted()
         }
     }
     Column(
@@ -132,7 +116,7 @@ private fun PageContent(
         Tab.Weather -> {
             SearchRow(onSearch = { query -> scope.launch { state.weather.search(query) } })
             PlaceChips(
-                saved = state.savedPlaces,
+                saved = state.places.saved,
                 current = state.weather.currentPlace,
                 onPick = { place -> scope.launch { state.weather.load(place) } },
             )
@@ -150,10 +134,10 @@ private fun PageContent(
                 current = state.weather.currentPlace,
                 places =
                     PlaceActions(
-                        saved = state.savedPlaces,
-                        onSave = state::saveCurrentPlace,
-                        onMove = state::movePlace,
-                        onDelete = state::deletePlace,
+                        saved = state.places.saved,
+                        onSave = { state.places.save(state.weather.currentPlace) },
+                        onMove = state.places::move,
+                        onDelete = state.places::delete,
                     ),
             )
         }
