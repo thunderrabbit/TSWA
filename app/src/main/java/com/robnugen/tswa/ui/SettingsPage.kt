@@ -28,13 +28,20 @@ fun SettingsPage(
     enabled: Set<Scale>,
     onToggle: (Scale) -> Unit,
     current: Place,
-    saved: List<Place>,
-    onSave: () -> Unit,
+    places: PlaceActions,
 ) {
     ScalesCard(enabled, onToggle)
-    SavePlaceButton(current, saved, onSave)
-    SavedPlacesCard(saved)
+    SavePlaceButton(current, places.saved, places.onSave)
+    SavedPlacesCard(places.saved, places.onMove, places.onDelete)
 }
+
+// The saved list and what can be done to it from Settings.
+class PlaceActions(
+    val saved: List<Place>,
+    val onSave: () -> Unit,
+    val onMove: (from: Int, to: Int) -> Unit,
+    val onDelete: (Place) -> Unit,
+)
 
 // One row per scale, in C, F, K, R order. The last scale that is on
 // cannot be switched off, so its box is greyed out.

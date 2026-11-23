@@ -19,6 +19,10 @@ private val tswaColorScheme =
         surfaceVariant = TswaColors.Navy,
         onSurfaceVariant = TswaColors.Muted,
         outline = TswaColors.Line,
+        // The Undo snackbar: navy, with the action in amber.
+        inverseSurface = TswaColors.Navy,
+        inverseOnSurface = TswaColors.Text,
+        inversePrimary = TswaColors.Amber,
     )
 
 // Plain Text uses bodyLarge, whose fixed 24sp line height spreads out
