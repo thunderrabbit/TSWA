@@ -26,14 +26,15 @@ enum class Scale(
 
     fun convert(celsius: Double): Double = fromCelsius(celsius)
 
-    // One decimal, rounded from the double's exact value as the web
-    // version's toFixed(1) did (so absolute zero reads -273.1 °C), and
-    // never "-0.0".
+    // One decimal, rounded half away from zero from the number as it is
+    // written (Double.toString), not from the double's binary value: -273.15
+    // is stored as -273.1499999..., which would round to -273.1. Never
+    // "-0.0".
     fun format(
         celsius: Double,
         withSymbol: Boolean = true,
     ): String {
-        val rounded = BigDecimal(convert(celsius)).setScale(1, RoundingMode.HALF_UP)
+        val rounded = BigDecimal(convert(celsius).toString()).setScale(1, RoundingMode.HALF_UP)
         val number = if (rounded.signum() == 0) "0.0" else rounded.toPlainString()
         return if (withSymbol) number + symbol else number
     }
