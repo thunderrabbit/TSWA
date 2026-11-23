@@ -14,13 +14,16 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -38,10 +41,21 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.robnugen.tswa.BuildConfig
 import com.robnugen.tswa.R
+import com.robnugen.tswa.temperature.Scale
+
+// Where the converter starts when there is no weather to seed it.
+private const val DEFAULT_CONVERTER_C = 22.2
 
 @Composable
 fun TswaApp() {
     var current by rememberSaveable { mutableStateOf(Tab.Weather) }
+    // One scale for the whole app: stepping it on one page steps it on
+    // every page.
+    var scale by rememberSaveable { mutableStateOf(Scale.C) }
+    val enabled = Scale.DEFAULT_ENABLED
+    var converterC by rememberSaveable { mutableDoubleStateOf(DEFAULT_CONVERTER_C) }
+    // Each tab keeps its own scroll position, as the web page did.
+    val scrolls = Tab.entries.associateWith { rememberScrollState() }
     Column(
         Modifier
             .fillMaxSize()
@@ -51,11 +65,26 @@ fun TswaApp() {
             Modifier
                 .weight(1f)
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 14.dp),
+                .verticalScroll(scrolls.getValue(current))
+                .padding(horizontal = 14.dp, vertical = 16.dp),
         ) {
             Header()
-            Spacer(Modifier.height(24.dp))
-            TabPage(current)
+            Spacer(Modifier.height(10.dp))
+            when (current) {
+                Tab.Converter -> {
+                    ConverterPage(
+                        celsius = converterC,
+                        scale = scale,
+                        enabled = enabled,
+                        onStep = { scale = Scale.next(scale, enabled) },
+                        onSet = { converterC = it },
+                    )
+                }
+
+                else -> {
+                    TabPage(current)
+                }
+            }
         }
         TabBar(current, onSelect = { current = it })
     }

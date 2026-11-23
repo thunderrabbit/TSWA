@@ -13,6 +13,7 @@ object TswaColors {
     val Text = css("#EEF3FB") // --text
     val Muted = css("#9DB1CF") // --muted
     val Amber = css("#FFB454") // --accent
+    val OnAmber = css("#1A1206") // text on an amber pill
     val Cyan = css("#57C7FF") // --accent2
     val TabBar = css("#0E1626") // .tabbar background
 
