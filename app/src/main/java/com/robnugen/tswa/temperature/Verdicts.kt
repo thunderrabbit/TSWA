@@ -193,7 +193,7 @@ object Verdicts {
             Heat(
                 fromC = 1_150.0,
                 "Lava",
-                "Runny lava from Hawaiian volcanoes flows out at about 1,150 C / 2,100 F.",
+                "Runny lava flows out at about 1,150 C / 2,100 F.",
             ),
             Heat(fromC = 1_538.0, "Iron melts", "Iron turns liquid at 1,538 C / 2,800 F. Welcome to the steel works."),
             Heat(fromC = 2_076.0, "Boron melts", "Boron, one of the hardest elements, melts at 2,076 C / 3,769 F."),
