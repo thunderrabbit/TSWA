@@ -21,11 +21,16 @@ import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.SnackbarDuration
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
+import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -74,6 +79,16 @@ fun TswaApp(state: AppState) {
             ?.current
             ?.temperatureC
     LaunchedEffect(currentC) { currentC?.let(state::seedConverter) }
+    // A swiped-away place can be brought back for a few seconds.
+    val snackbar = remember { SnackbarHostState() }
+    val deleted = state.lastDeleted
+    LaunchedEffect(deleted) {
+        if (deleted != null) {
+            val name = deleted.second.shortName
+            val answer = snackbar.showSnackbar("Deleted $name", "Undo", duration = SnackbarDuration.Short)
+            if (answer == SnackbarResult.ActionPerformed) state.undoDelete() else state.forgetDeleted()
+        }
+    }
     Column(
         Modifier
             .fillMaxSize()
@@ -91,6 +106,7 @@ fun TswaApp(state: AppState) {
             PageContent(current, state)
             Footer()
         }
+        SnackbarHost(snackbar)
         TabBar(current, onSelect = { current = it })
     }
 }
@@ -132,8 +148,13 @@ private fun PageContent(
                 enabled = state.enabledScales,
                 onToggle = state::toggleScale,
                 current = state.weather.currentPlace,
-                saved = state.savedPlaces,
-                onSave = state::saveCurrentPlace,
+                places =
+                    PlaceActions(
+                        saved = state.savedPlaces,
+                        onSave = state::saveCurrentPlace,
+                        onMove = state::movePlace,
+                        onDelete = state::deletePlace,
+                    ),
             )
         }
     }
