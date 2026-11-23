@@ -20,6 +20,15 @@ class AppState(
     var enabledScales by mutableStateOf(prefs.enabledScales)
         private set
 
+    // The tab on screen; the app reopens on it.
+    var tab by mutableStateOf(Tab.entries.firstOrNull { it.name == prefs.lastTab } ?: Tab.Weather)
+        private set
+
+    fun showTab(next: Tab) {
+        tab = next
+        prefs.lastTab = next.name
+    }
+
     var scale by mutableStateOf(ScaleChoice.shown(prefs.shownScale, prefs.enabledScales))
         private set
 

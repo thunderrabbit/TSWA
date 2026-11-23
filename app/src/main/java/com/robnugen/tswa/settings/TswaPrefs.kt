@@ -33,6 +33,13 @@ class TswaPrefs(
             prefs.edit().putString(KEY_SHOWN_SCALE, value.name).apply()
         }
 
+    // The tab the app was last on, by name; it reopens there.
+    var lastTab: String?
+        get() = prefs.getString(KEY_LAST_TAB, null)
+        set(value) {
+            prefs.edit().putString(KEY_LAST_TAB, value).apply()
+        }
+
     // Whether the person (or the import) has chosen scales yet.
     val hasEnabledScales: Boolean
         get() = prefs.contains(KEY_ENABLED_SCALES)
@@ -74,5 +81,6 @@ class TswaPrefs(
         const val KEY_SAVED_PLACES = "saved_places"
         const val KEY_LEGACY_IMPORT_DONE = "legacy_import_done"
         const val KEY_ONBOARDED = "onboarded"
+        const val KEY_LAST_TAB = "last_tab"
     }
 }

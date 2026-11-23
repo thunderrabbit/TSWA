@@ -52,7 +52,7 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun TswaApp(state: AppState) {
-    var current by rememberSaveable { mutableStateOf(Tab.Weather) }
+    val current = state.tab
     // Each tab keeps its own scroll position, as the web page did.
     val scrolls = Tab.entries.associateWith { rememberScrollState() }
     StartUp(state)
@@ -91,7 +91,7 @@ fun TswaApp(state: AppState) {
             Footer()
         }
         SnackbarHost(snackbar)
-        TabBar(current, onSelect = { current = it })
+        TabBar(current, onSelect = state::showTab)
     }
 }
 

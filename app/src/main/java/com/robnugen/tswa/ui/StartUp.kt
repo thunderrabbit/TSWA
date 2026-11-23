@@ -16,7 +16,7 @@ import kotlinx.coroutines.CompletableDeferred
 
 // What happens once when the app opens: bring over the WebView version's
 // places (mg #897), then either ask about location (first run, or after
-// the saved list was emptied; mg #899) or show Adelaide.
+// the saved list was emptied; mg #899) or refresh the last place shown.
 @Composable
 fun StartUp(state: AppState) {
     val context = LocalContext.current
@@ -55,7 +55,9 @@ fun StartUp(state: AppState) {
             }
             state.places.markOnboarded()
         } else {
-            state.weather.load(Place.ADELAIDE)
+            // The last place shown: its cached weather is already on
+            // screen, and this refreshes it (Adelaide when nothing is cached).
+            state.weather.load(state.weather.currentPlace)
         }
     }
 }
