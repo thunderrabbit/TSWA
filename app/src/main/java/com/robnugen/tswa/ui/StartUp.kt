@@ -43,6 +43,7 @@ fun StartUp(state: AppState) {
                         answer.await()
                     }
             val here = if (allowed) location.current() else null
+            Log.i("TSWA", "Onboarding: location ${if (allowed) "allowed" else "refused"}, fix ${here != null}")
             if (here == null) {
                 state.weather.load(Place.ADELAIDE)
             } else {
