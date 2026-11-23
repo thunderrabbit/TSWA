@@ -56,11 +56,9 @@ fun WeatherPage(
     weather: WeatherController,
     control: ScaleControl,
     enabled: Set<Scale>,
-    onSearch: (String) -> Unit,
 ) {
     val shown = weather.weather
     val forecast = shown?.forecast
-    SearchRow(onSearch)
     Hero(shown?.place ?: weather.currentPlace, forecast?.current, control)
     if (forecast != null) {
         HighLow(forecast, control)

@@ -1,0 +1,18 @@
+<!doctype html>
+<!--
+  Read-only bridge to the WebView version's localStorage (mg #897).
+  It lives in www/ because the old app was served from
+  file:///android_asset/www/index.html, so this page sees the same
+  storage. It reads two keys and hands them to Kotlin; it writes nothing.
+-->
+<meta charset="utf-8">
+<script>
+  var found = {};
+  try {
+    found["tswa-places"] = localStorage.getItem("tswa-places");
+    found["tswa-scales"] = localStorage.getItem("tswa-scales");
+  } catch (e) {
+    found.error = String(e);
+  }
+  TswaLegacy.receive(JSON.stringify(found));
+</script>

@@ -1,5 +1,6 @@
 package com.robnugen.tswa.ui
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -31,6 +32,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
@@ -43,6 +45,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.robnugen.tswa.BuildConfig
 import com.robnugen.tswa.R
+import com.robnugen.tswa.places.LegacyReader
 import com.robnugen.tswa.weather.Place
 import kotlinx.coroutines.launch
 
@@ -51,10 +54,19 @@ fun TswaApp(state: AppState) {
     var current by rememberSaveable { mutableStateOf(Tab.Weather) }
     // Each tab keeps its own scroll position, as the web page did.
     val scrolls = Tab.entries.associateWith { rememberScrollState() }
-    val scope = rememberCoroutineScope()
     // Fetch the weather once at start: Adelaide until saved places and
     // onboarding (mg #897, #899) choose the place.
-    LaunchedEffect(Unit) { state.weather.load(Place.ADELAIDE) }
+    val context = LocalContext.current
+    LaunchedEffect(Unit) {
+        // The WebView version's saved places come over once (mg #897).
+        state.importLegacyOnce {
+            LegacyReader(context).read().also { found ->
+                val places = found?.get("tswa-places")
+                Log.i("TSWA", "Old WebView storage: ${found?.keys}; tswa-places ${places?.length ?: 0} chars")
+            }
+        }
+        state.weather.load(Place.ADELAIDE)
+    }
     // The converter starts from the weather's temperature.
     val currentC =
         state.weather.weather
@@ -76,33 +88,54 @@ fun TswaApp(state: AppState) {
         ) {
             Header()
             Spacer(Modifier.height(10.dp))
-            when (current) {
-                Tab.Converter -> {
-                    ConverterPage(
-                        celsius = state.converterC,
-                        scale = state.scale,
-                        enabled = state.enabledScales,
-                        onStep = state::stepScale,
-                        onSet = state::setConverter,
-                    )
-                }
-
-                Tab.Weather -> {
-                    WeatherPage(
-                        weather = state.weather,
-                        control = ScaleControl(state.scale, state::stepScale),
-                        enabled = state.enabledScales,
-                        onSearch = { query -> scope.launch { state.weather.search(query) } },
-                    )
-                }
-
-                Tab.Settings -> {
-                    SettingsPage(enabled = state.enabledScales, onToggle = state::toggleScale)
-                }
-            }
+            PageContent(current, state)
             Footer()
         }
         TabBar(current, onSelect = { current = it })
+    }
+}
+
+// The page for the chosen tab.
+@Composable
+private fun PageContent(
+    current: Tab,
+    state: AppState,
+) {
+    val scope = rememberCoroutineScope()
+    when (current) {
+        Tab.Converter -> {
+            ConverterPage(
+                celsius = state.converterC,
+                scale = state.scale,
+                enabled = state.enabledScales,
+                onStep = state::stepScale,
+                onSet = state::setConverter,
+            )
+        }
+
+        Tab.Weather -> {
+            SearchRow(onSearch = { query -> scope.launch { state.weather.search(query) } })
+            PlaceChips(
+                saved = state.savedPlaces,
+                current = state.weather.currentPlace,
+                onPick = { place -> scope.launch { state.weather.load(place) } },
+            )
+            WeatherPage(
+                weather = state.weather,
+                control = ScaleControl(state.scale, state::stepScale),
+                enabled = state.enabledScales,
+            )
+        }
+
+        Tab.Settings -> {
+            SettingsPage(
+                enabled = state.enabledScales,
+                onToggle = state::toggleScale,
+                current = state.weather.currentPlace,
+                saved = state.savedPlaces,
+                onSave = state::saveCurrentPlace,
+            )
+        }
     }
 }
 
