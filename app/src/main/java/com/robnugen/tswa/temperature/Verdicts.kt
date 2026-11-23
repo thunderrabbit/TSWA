@@ -28,16 +28,23 @@ private data class Heat(
     constructor(fromC: Double, title: String, detail: String) : this(fromC, Verdict(title, detail))
 }
 
+// A row of the Landmarks table. Most have no words of their own: the band
+// or milestone at the same temperature speaks for them, so 70.0 and 70.2 °C
+// (or -195.8 and -196.0) read the same. Only landmarks no band marks, like
+// body temperature, bring their own [detail].
 data class Landmark(
     val label: String,
     val celsius: Double,
-    val detail: String,
+    val detail: String? = null,
 )
 
 data class Preset(
     val label: String,
     val celsius: Double,
 )
+
+// Death Valley, 1913: where weather ends and kitchens and physics begin.
+private const val HOTTEST_WEATHER_C = 56.7
 
 object Verdicts {
     // Each verdict covers everything up to and including its limit (°C).
@@ -63,7 +70,7 @@ object Verdicts {
             Band(upToC = -218.79, "Oxygen freezes", "Even oxygen is solid ice down here."),
             Band(upToC = -210.0, "Nitrogen freezes", "Nitrogen, most of the air you breathe, turns to solid ice."),
             Band(
-                upToC = -196.0,
+                upToC = -195.8,
                 "Liquid nitrogen boils",
                 "It boils at this temperature. Your drink would shatter, not freeze.",
             ),
@@ -106,7 +113,7 @@ object Verdicts {
             Band(upToC = 38.0, "Hot", "Seek shade, drink water, slow down."),
             Band(upToC = 45.0, "Very hot", "Dangerous for exertion. Adelaide knows this one well."),
             Band(
-                upToC = 56.7,
+                upToC = HOTTEST_WEATHER_C,
                 "Extreme heat",
                 "Approaching the hottest ever measured on Earth: 56.7 C / 134 F, Death Valley, 1913.",
             ),
@@ -114,7 +121,7 @@ object Verdicts {
     private val heat: List<Heat> =
         listOf(
             Heat(
-                fromC = 56.7,
+                fromC = HOTTEST_WEATHER_C,
                 "Hotter than any weather on Earth",
                 "No place on Earth gets this hot. From here on, it is kitchens and physics.",
             ),
@@ -213,86 +220,54 @@ object Verdicts {
 
     val landmarks: List<Landmark> =
         listOf(
-            Landmark(
-                "Absolute zero",
-                celsius = -273.15,
-                "Nothing moves. Nothing can be colder; this is the floor of physics.",
-            ),
-            Landmark(
-                "Afterglow of the Big Bang",
-                celsius = -270.42,
-                "2.7 K: the glow left over from the Big Bang, the temperature of deep space.",
-            ),
-            Landmark("Helium boils", celsius = -268.93, "4.2 K: the lowest boiling point of anything."),
-            Landmark("Hydrogen boils", celsius = -252.88, "Liquid hydrogen, the rocket fuel, boils here."),
-            Landmark("Pluto's surface", celsius = -233.15, "About 40 K: a normal day on Pluto."),
-            Landmark("Oxygen freezes", celsius = -218.79, "Solid oxygen. It is pale blue."),
-            Landmark("Nitrogen freezes", celsius = -210.0, "Most of the air you breathe turns to ice."),
-            Landmark(
-                "Liquid nitrogen boils",
-                celsius = -195.8,
-                "Liquid nitrogen boils here. Things dipped in it shatter like glass.",
-            ),
-            Landmark("Oxygen liquefies", celsius = -182.96, "Air itself turns to liquid at this temperature."),
-            Landmark("Night on the Moon", celsius = -173.0, "The Moon's night side, about 100 K."),
-            Landmark("Natural gas liquefies", celsius = -161.5, "Methane turns liquid, ready for an LNG tanker."),
-            Landmark(
-                "Vostok record - coldest ever on Earth",
-                celsius = -89.2,
-                "Vostok, Antarctica, 1983: the coldest natural temperature ever measured.",
-            ),
-            Landmark(
-                "Dry ice sublimates",
-                celsius = -78.5,
-                "Solid carbon dioxide turns straight to gas. Spooky fog included.",
-            ),
-            Landmark(
-                "F/C crossover - Celsius equals Fahrenheit",
-                celsius = -40.0,
-                "The one temperature that reads the same on both scales.",
-            ),
-            Landmark("Mercury freezes", celsius = -38.83, "Thermometer mercury turns solid."),
-            Landmark("Freezing - water freezes", celsius = 0.0, "Water freezes at 0 C / 32 F. Exactly here."),
+            Landmark("Absolute zero", celsius = -273.15),
+            Landmark("Afterglow of the Big Bang", celsius = -270.42),
+            Landmark("Helium boils", celsius = -268.93),
+            Landmark("Hydrogen boils", celsius = -252.88),
+            Landmark("Pluto's surface", celsius = -233.15),
+            Landmark("Oxygen freezes", celsius = -218.79),
+            Landmark("Nitrogen freezes", celsius = -210.0),
+            Landmark("Liquid nitrogen boils", celsius = -195.8),
+            Landmark("Oxygen liquefies", celsius = -182.96),
+            Landmark("Night on the Moon", celsius = -173.0),
+            Landmark("Natural gas liquefies", celsius = -161.5),
+            Landmark("Vostok record - coldest ever on Earth", celsius = -89.2),
+            Landmark("Dry ice sublimates", celsius = -78.5),
+            Landmark("F/C crossover - Celsius equals Fahrenheit", celsius = -40.0),
+            Landmark("Mercury freezes", celsius = -38.83),
+            Landmark("Freezing - water freezes", celsius = 0.0),
             Landmark(
                 "Healthy elephant",
                 celsius = 36.0,
                 "About 36 C / 96.8 F: an elephant runs a little cooler than you.",
             ),
             Landmark("Body temp", celsius = 37.0, "37 C / 98.6 F: human body temperature. You, right now."),
-            Landmark(
-                "Death Valley record - hottest ever on Earth",
-                celsius = 56.7,
-                "56.7 C / 134 F, Death Valley, 1913: the hottest ever reliably measured.",
-            ),
-            Landmark(
-                "Water boils on top of Everest",
-                celsius = 70.0,
-                "The thin air lets water boil at about 70 C / 158 F. Terrible for tea.",
-            ),
-            Landmark("Water boils on Kilimanjaro", celsius = 80.0, "5,895 m up, about 80 C / 176 F."),
-            Landmark("Water boils on Mont Blanc", celsius = 84.0, "4,806 m up, about 84 C / 183 F."),
-            Landmark("Water boils on Mount Fuji", celsius = 87.6, "3,776 m up, about 87.6 C / 190 F."),
-            Landmark("Water boils in Mexico City", celsius = 92.8, "2,240 m up, about 93 C / 199 F."),
-            Landmark("Water boils in Denver", celsius = 94.9, "One mile up, about 95 C / 203 F."),
-            Landmark("Boiling - water boils", celsius = 100.0, "100 C / 212 F. Kettle's done."),
-            Landmark("Water boils at the Dead Sea", celsius = 101.4, "430 m below sea level, about 101.4 C."),
-            Landmark("Pressure cooker", celsius = 121.0, "About 121 C / 250 F at full steam."),
-            Landmark("Sugar caramelises", celsius = 160.0, "Sugar browns into caramel."),
-            Landmark("Oven temperature", celsius = 180.0, "A moderate oven. Cookies, not people."),
-            Landmark("Paper burns", celsius = 232.78, "451 F, famously. Books and pizza crusts beware."),
-            Landmark("Pizza oven", celsius = 260.0, "500 F territory. Ninety seconds to perfect leopard-spotting."),
-            Landmark("Lead melts", celsius = 327.46, "Lead turns liquid."),
-            Landmark("Surface of Venus", celsius = 464.0, "Hotter than Mercury, day and night."),
-            Landmark("Things glow red", celsius = 525.0, "Anything solid starts to glow dull red in the dark."),
-            Landmark("Aluminium melts", celsius = 660.32, "Drink cans turn to liquid."),
-            Landmark("Gold melts", celsius = 1_064.18, "Gold pours like honey."),
-            Landmark("Lava", celsius = 1_150.0, "Runny Hawaiian lava, about this hot."),
-            Landmark("Iron melts", celsius = 1_538.0, "Welcome to the steel works."),
-            Landmark("Boron melts", celsius = 2_076.0, "One of the hardest elements gives up."),
-            Landmark("Tungsten melts", celsius = 3_422.0, "The highest melting point of any metal."),
-            Landmark("Surface of the Sun", celsius = 5_498.85, "5,772 K: the Sun's visible surface."),
-            Landmark("Lightning bolt", celsius = 29_726.85, "About 30,000 K, five times the Sun's surface."),
-            Landmark("Core of the Sun", celsius = 15_000_000.0, "About 15 million C, where hydrogen fuses."),
+            Landmark("Death Valley record - hottest ever on Earth", celsius = HOTTEST_WEATHER_C),
+            Landmark("Water boils on top of Everest", celsius = 70.0),
+            Landmark("Water boils on Kilimanjaro", celsius = 80.0),
+            Landmark("Water boils on Mont Blanc", celsius = 84.0),
+            Landmark("Water boils on Mount Fuji", celsius = 87.6),
+            Landmark("Water boils in Mexico City", celsius = 92.8),
+            Landmark("Water boils in Denver", celsius = 94.9),
+            Landmark("Boiling - water boils", celsius = 100.0),
+            Landmark("Water boils at the Dead Sea", celsius = 101.4),
+            Landmark("Pressure cooker", celsius = 121.0),
+            Landmark("Sugar caramelises", celsius = 160.0),
+            Landmark("Oven temperature", celsius = 180.0),
+            Landmark("Paper burns", celsius = 232.78),
+            Landmark("Pizza oven", celsius = 260.0),
+            Landmark("Lead melts", celsius = 327.46),
+            Landmark("Surface of Venus", celsius = 464.0),
+            Landmark("Things glow red", celsius = 525.0),
+            Landmark("Aluminium melts", celsius = 660.32),
+            Landmark("Gold melts", celsius = 1_064.18),
+            Landmark("Lava", celsius = 1_150.0),
+            Landmark("Iron melts", celsius = 1_538.0),
+            Landmark("Boron melts", celsius = 2_076.0),
+            Landmark("Tungsten melts", celsius = 3_422.0),
+            Landmark("Surface of the Sun", celsius = 5_498.85),
+            Landmark("Lightning bolt", celsius = 29_726.85),
+            Landmark("Core of the Sun", celsius = 15_000_000.0),
         )
 
     val presets: List<Preset> =
@@ -311,13 +286,16 @@ object Verdicts {
 
     private const val LANDMARK_TOLERANCE_C = 0.005
 
-    // A landmark hit exactly wins; otherwise the first band that holds it,
-    // and above the hottest weather ever the hottest milestone passed.
+    // Above the hottest weather ever, the hottest milestone passed. Below
+    // it, a landmark with words of its own hit exactly; otherwise the first
+    // band that holds it.
     fun forCelsius(celsius: Double): Verdict {
-        landmarks.firstOrNull { abs(celsius - it.celsius) < LANDMARK_TOLERANCE_C }?.let {
-            return Verdict(it.label, it.detail)
+        val hit = landmarks.firstOrNull { abs(celsius - it.celsius) < LANDMARK_TOLERANCE_C }
+        val words = hit?.detail
+        return when {
+            celsius > HOTTEST_WEATHER_C -> heat.last { celsius >= it.fromC }.verdict
+            words != null -> Verdict(hit.label, words)
+            else -> bands.first { celsius <= it.upToC }.verdict
         }
-        return bands.firstOrNull { celsius <= it.upToC }?.verdict
-            ?: heat.last { celsius >= it.fromC }.verdict
     }
 }

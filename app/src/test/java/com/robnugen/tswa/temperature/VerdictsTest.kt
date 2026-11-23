@@ -8,11 +8,20 @@ class VerdictsTest {
 
     @Test
     fun landmarkHitExactlyWinsOverItsBand() {
-        assertEquals("Boiling - water boils", title(100.0))
         assertEquals("Body temp", title(37.0))
-        assertEquals("Freezing - water freezes", title(0.0))
-        assertEquals("Paper burns", title(232.78))
+        assertEquals("Healthy elephant", title(36.0))
         assertEquals("Absolute zero", title(Scale.ABSOLUTE_ZERO_C))
+        assertEquals("Freezing point", title(0.0))
+    }
+
+    @Test
+    fun aColdLandmarkReadsTheSameOnItAndJustColder() {
+        // Not absolute zero (nothing is colder) or freezing (a point: "Exactly here").
+        val ranged = Verdicts.landmarks.filter { it.celsius in -273.0..56.7 && it.detail == null && it.celsius != 0.0 }
+        ranged.forEach {
+            assertEquals(it.label, Verdicts.forCelsius(it.celsius), Verdicts.forCelsius(it.celsius - 0.2))
+        }
+        assertEquals(Verdicts.forCelsius(-196.0), Verdicts.forCelsius(-195.8))
     }
 
     @Test
@@ -32,6 +41,15 @@ class VerdictsTest {
         assertEquals("Water boils on top of Everest", title(75.0))
         assertEquals("Water boils on Mount Fuji", title(90.0))
         assertEquals("Water boils in Denver", title(99.9))
+    }
+
+    @Test
+    fun aHotLandmarkReadsTheSameOnItAndJustPastIt() {
+        Verdicts.landmarks.filter { it.celsius > 56.7 }.forEach {
+            assertEquals(it.label, Verdicts.forCelsius(it.celsius), Verdicts.forCelsius(it.celsius + 0.2))
+        }
+        assertEquals(Verdicts.forCelsius(70.2), Verdicts.forCelsius(70.0))
+        assertEquals("Water boils at sea level", title(100.0))
     }
 
     @Test
@@ -69,6 +87,7 @@ class VerdictsTest {
         assertEquals(temps.sorted(), temps)
         assertEquals("Healthy elephant", title(36.0))
         assertEquals("Boron melts", title(2_076.0))
+        assertEquals("Paper burns", title(232.78))
     }
 
     @Test
