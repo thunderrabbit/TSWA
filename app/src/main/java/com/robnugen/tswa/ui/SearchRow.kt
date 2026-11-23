@@ -2,8 +2,10 @@ package com.robnugen.tswa.ui
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -12,6 +14,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -25,6 +28,7 @@ import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
@@ -32,18 +36,23 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.robnugen.tswa.weather.Place
+import com.robnugen.tswa.weather.SearchMatch
 import com.robnugen.tswa.weather.SearchNote
 
 private val fieldShape = RoundedCornerShape(10.dp)
 
 // "Search a place…" and Go, at the top of the Weather tab. The keyboard's
 // search key searches too, and the keyboard closes once a search starts.
-// The search's message shows right under the box, where the eye already is.
+// The search's message shows right under the box, where the eye already is,
+// and under it any same-named places to choose from.
 @Composable
 fun SearchRow(
     note: SearchNote?,
+    choices: List<SearchMatch>,
     onSearch: (String) -> Unit,
     onEdit: () -> Unit,
+    onPick: (Place) -> Unit,
 ) {
     var query by rememberSaveable { mutableStateOf("") }
     val keyboard = LocalSoftwareKeyboardController.current
@@ -95,6 +104,35 @@ fun SearchRow(
         }
     }
     if (note != null) SearchNoteLine(note)
+    if (choices.isNotEmpty()) Choices(choices, onPick)
+}
+
+// Name on top, district, state and country under it, so two Portlands differ.
+@Composable
+private fun Choices(
+    choices: List<SearchMatch>,
+    onPick: (Place) -> Unit,
+) {
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .padding(bottom = 10.dp)
+            .background(TswaColors.Navy, fieldShape)
+            .border(1.dp, TswaColors.Line, fieldShape),
+    ) {
+        choices.forEachIndexed { index, match ->
+            if (index > 0) HorizontalDivider(thickness = 1.dp, color = TswaColors.Line)
+            Column(
+                Modifier
+                    .fillMaxWidth()
+                    .clickable(role = Role.Button, onClick = { onPick(match.place) })
+                    .padding(horizontal = 12.dp, vertical = 8.dp),
+            ) {
+                Text(match.place.shortName, color = TswaColors.Text, fontSize = 15.sp, fontWeight = FontWeight.SemiBold)
+                Text(match.area, color = TswaColors.Muted, fontSize = 13.sp)
+            }
+        }
+    }
 }
 
 // Read out by TalkBack too: a failed search changes nothing else on screen.
