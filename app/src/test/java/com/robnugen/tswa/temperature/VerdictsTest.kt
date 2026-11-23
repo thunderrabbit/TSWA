@@ -9,7 +9,7 @@ class VerdictsTest {
     @Test
     fun landmarkHitExactlyWinsOverItsBand() {
         assertEquals("Body temp", title(37.0))
-        assertEquals("Healthy elephant", title(36.0))
+        assertEquals("Healthy chicken", title(41.5))
         assertEquals("Absolute zero", title(Scale.ABSOLUTE_ZERO_C))
         assertEquals("Freezing point", title(0.0))
     }
@@ -65,6 +65,7 @@ class VerdictsTest {
     @Test
     fun aHotValueKeepsTheHottestMilestonePassed() {
         assertEquals("Lead melts", title(400.0))
+        assertEquals("Zinc melts", title(450.0))
         assertEquals("Gold melts", title(1_100.0))
         assertEquals("Boron melts", title(2_100.0))
         assertEquals("Tungsten melts", title(5_000.0))
@@ -85,7 +86,7 @@ class VerdictsTest {
     fun landmarksAreInOrderAndBandsLineUp() {
         val temps = Verdicts.landmarks.map { it.celsius }
         assertEquals(temps.sorted(), temps)
-        assertEquals("Healthy elephant", title(36.0))
+        assertEquals("Healthy chicken", title(41.5))
         assertEquals("Boron melts", title(2_076.0))
         assertEquals("Paper burns", title(232.78))
     }
@@ -99,6 +100,6 @@ class VerdictsTest {
     fun everyPresetIsInsidePhysics() {
         Verdicts.presets.forEach { assert(it.celsius >= Scale.ABSOLUTE_ZERO_C) }
         assertEquals(10, Verdicts.presets.size)
-        assertEquals(44, Verdicts.landmarks.size)
+        assertEquals(45, Verdicts.landmarks.size)
     }
 }
