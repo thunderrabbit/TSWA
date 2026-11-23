@@ -23,14 +23,25 @@ class VerdictsTest {
         assertEquals("Pleasant", title(22.1))
         assertEquals("Below freezing", title(-5.0))
         assertEquals("Dangerously cold", title(-39.95))
-        assertEquals("Hotter than any weather on Earth", title(99.9))
+        assertEquals("Hotter than any weather on Earth", title(69.9))
     }
 
     @Test
-    fun justAboveBoilingIsOvenTerritory() {
-        assertEquals("Oven territory", title(100.1))
-        assertEquals("Oven territory", title(150.0))
-        assertEquals("Oven territory", title(327.4))
+    fun betweenTheHottestWeatherAndBoilingWaterBoilsHigherUp() {
+        assertEquals("Hotter than any weather on Earth", title(60.0))
+        assertEquals("Water boils on top of Everest", title(75.0))
+        assertEquals("Water boils on Mount Fuji", title(90.0))
+        assertEquals("Water boils in Denver", title(99.9))
+    }
+
+    @Test
+    fun boilingAtSeaLevelStaysAWhile() {
+        assertEquals("Water boils at sea level", title(100.2))
+        assertEquals("Water boils at sea level", title(101.0))
+        assertEquals("Water boils at the Dead Sea", title(110.0))
+        assertEquals("Pressure cooker", title(150.0))
+        assertEquals("A moderate oven", title(200.0))
+        assertEquals("Pizza oven", title(327.4))
     }
 
     @Test
@@ -69,6 +80,6 @@ class VerdictsTest {
     fun everyPresetIsInsidePhysics() {
         Verdicts.presets.forEach { assert(it.celsius >= Scale.ABSOLUTE_ZERO_C) }
         assertEquals(10, Verdicts.presets.size)
-        assertEquals(36, Verdicts.landmarks.size)
+        assertEquals(44, Verdicts.landmarks.size)
     }
 }

@@ -18,9 +18,9 @@ private data class Band(
     constructor(upToC: Double, title: String, detail: String) : this(upToC, Verdict(title, detail))
 }
 
-// Above boiling: a verdict covering every temperature from [fromC] up to
-// the next one, so a value a little hotter than molten boron still reads
-// "Boron melts".
+// Above the hottest weather ever: a verdict covering every temperature
+// from [fromC] up to the next one, so a value a little hotter than molten
+// boron still reads "Boron melts", and 101 °C still "Water boils at sea level".
 private data class Heat(
     val fromC: Double,
     val verdict: Verdict,
@@ -110,19 +110,65 @@ object Verdicts {
                 "Extreme heat",
                 "Approaching the hottest ever measured on Earth: 56.7 C / 134 F, Death Valley, 1913.",
             ),
-            Band(
-                upToC = 100.0,
-                "Hotter than any weather on Earth",
-                "No place on Earth gets this hot. From here on, it is kitchens and physics.",
-            ),
         )
     private val heat: List<Heat> =
         listOf(
             Heat(
-                fromC = 100.0,
-                "Oven territory",
-                "Roasts, pizzas and burning paper live up here. Not weather any more.",
+                fromC = 56.7,
+                "Hotter than any weather on Earth",
+                "No place on Earth gets this hot. From here on, it is kitchens and physics.",
             ),
+            // Where water boils lower down the less air presses on it:
+            // standard-atmosphere pressure at each height, rounded.
+            Heat(
+                fromC = 70.0,
+                "Water boils on top of Everest",
+                "Up at 8,849 m the thin air lets water boil at about 70 C / 158 F. Terrible for tea.",
+            ),
+            Heat(
+                fromC = 80.0,
+                "Water boils on Kilimanjaro",
+                "On Africa's highest point, 5,895 m up, water boils at about 80 C / 176 F.",
+            ),
+            Heat(
+                fromC = 84.0,
+                "Water boils on Mont Blanc",
+                "On top of the Alps, 4,806 m up, water boils at about 84 C / 183 F.",
+            ),
+            Heat(
+                fromC = 87.6,
+                "Water boils on Mount Fuji",
+                "At Fuji's 3,776 m summit water boils at about 87.6 C / 190 F, so noodles take longer.",
+            ),
+            Heat(
+                fromC = 92.8,
+                "Water boils in Mexico City",
+                "2,240 m up, Mexico City's water boils at about 93 C / 199 F.",
+            ),
+            Heat(
+                fromC = 94.9,
+                "Water boils in Denver",
+                "In the Mile High City water boils at about 95 C / 203 F. Hence high-altitude baking instructions.",
+            ),
+            Heat(
+                fromC = 100.0,
+                "Water boils at sea level",
+                "100 C / 212 F under the whole weight of the atmosphere. Kettle's done.",
+            ),
+            Heat(
+                fromC = 101.4,
+                "Water boils at the Dead Sea",
+                "430 m below sea level, the lowest land on Earth, the extra air holds boiling off until about 101.4 C.",
+            ),
+            Heat(
+                fromC = 121.0,
+                "Pressure cooker",
+                "A pressure cooker at full steam boils water at about 121 C / 250 F. That is why it cooks so fast.",
+            ),
+            Heat(fromC = 160.0, "Sugar caramelises", "Sugar starts browning into caramel around 160 C / 320 F."),
+            Heat(fromC = 180.0, "A moderate oven", "180 C / 356 F: cakes, cookies and roasts. Not people."),
+            Heat(fromC = 232.78, "Paper burns", "451 F, famously. Books and pizza crusts beware."),
+            Heat(fromC = 260.0, "Pizza oven", "500 F territory. Ninety seconds to perfect leopard-spotting."),
             Heat(fromC = 327.46, "Lead melts", "Lead turns liquid at 327 C / 621 F."),
             Heat(
                 fromC = 464.0,
@@ -223,7 +269,15 @@ object Verdicts {
                 celsius = 70.0,
                 "The thin air lets water boil at about 70 C / 158 F. Terrible for tea.",
             ),
+            Landmark("Water boils on Kilimanjaro", celsius = 80.0, "5,895 m up, about 80 C / 176 F."),
+            Landmark("Water boils on Mont Blanc", celsius = 84.0, "4,806 m up, about 84 C / 183 F."),
+            Landmark("Water boils on Mount Fuji", celsius = 87.6, "3,776 m up, about 87.6 C / 190 F."),
+            Landmark("Water boils in Mexico City", celsius = 92.8, "2,240 m up, about 93 C / 199 F."),
+            Landmark("Water boils in Denver", celsius = 94.9, "One mile up, about 95 C / 203 F."),
             Landmark("Boiling - water boils", celsius = 100.0, "100 C / 212 F. Kettle's done."),
+            Landmark("Water boils at the Dead Sea", celsius = 101.4, "430 m below sea level, about 101.4 C."),
+            Landmark("Pressure cooker", celsius = 121.0, "About 121 C / 250 F at full steam."),
+            Landmark("Sugar caramelises", celsius = 160.0, "Sugar browns into caramel."),
             Landmark("Oven temperature", celsius = 180.0, "A moderate oven. Cookies, not people."),
             Landmark("Paper burns", celsius = 232.78, "451 F, famously. Books and pizza crusts beware."),
             Landmark("Pizza oven", celsius = 260.0, "500 F territory. Ninety seconds to perfect leopard-spotting."),
@@ -258,7 +312,7 @@ object Verdicts {
     private const val LANDMARK_TOLERANCE_C = 0.005
 
     // A landmark hit exactly wins; otherwise the first band that holds it,
-    // and above boiling the hottest milestone already passed.
+    // and above the hottest weather ever the hottest milestone passed.
     fun forCelsius(celsius: Double): Verdict {
         landmarks.firstOrNull { abs(celsius - it.celsius) < LANDMARK_TOLERANCE_C }?.let {
             return Verdict(it.label, it.detail)
