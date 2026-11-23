@@ -22,15 +22,17 @@ class ScaleTest {
     fun formatsToOneDecimalWithSymbol() {
         assertEquals("22.2°C", Scale.C.format(22.2))
         assertEquals("212.0°F", Scale.F.format(100.0))
-        assertEquals("273.1K", Scale.K.format(0.0))
+        assertEquals("273.2K", Scale.K.format(0.0))
         assertEquals("491.7°R", Scale.R.format(0.0))
         assertEquals("63.3", Scale.F.format(17.4, withSymbol = false))
     }
 
     @Test
-    fun roundsLikeTheWebVersion() {
+    fun roundsExactHalvesAwayFromZero() {
         // -273.15 is stored as -273.1499999..., which the web showed as -273.1.
-        assertEquals("-273.1°C", Scale.C.format(Scale.ABSOLUTE_ZERO_C))
+        assertEquals("-273.2°C", Scale.C.format(Scale.ABSOLUTE_ZERO_C))
+        assertEquals("-459.7°F", Scale.F.format(Scale.ABSOLUTE_ZERO_C))
+        assertEquals("0.0°R", Scale.R.format(Scale.ABSOLUTE_ZERO_C))
         assertEquals("232.8°C", Scale.C.format(232.78))
         assertEquals("451.0°F", Scale.F.format(232.78))
     }
