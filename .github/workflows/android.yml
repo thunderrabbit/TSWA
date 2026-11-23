@@ -106,6 +106,6 @@ jobs:
           else
             gh release create "$TAG" $FILES \
               --title "TSWA $TAG" \
-              --notes "Automated build of TSWA (Tri-Scale Weather App) from commit ${{ github.sha }}. Install app-release.apk - the signed release build. Every release is signed with the same TSWA key, so releases always install over the top of earlier releases."
+              --notes "Automated build of TSWA (Two Skies Weather App) from commit ${{ github.sha }}. Install app-release.apk - the signed release build. Every release is signed with the same TSWA key, so releases always install over the top of earlier releases."
           fi
           echo "::notice title=GitHub Release::Published TSWA $TAG"
