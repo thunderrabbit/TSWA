@@ -93,7 +93,7 @@ class WeatherController(
         searchNote = SearchNote("Searching…")
         val lookup: Result<Place?> =
             try {
-                Result.success(Geocoding.firstPlace(geocode(name)))
+                Result.success(Geocoding.matches(geocode(name)).firstOrNull()?.place)
             } catch (unreachable: IOException) {
                 Result.failure(unreachable)
             } catch (garbled: SerializationException) {

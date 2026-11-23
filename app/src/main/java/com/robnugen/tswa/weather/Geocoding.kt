@@ -14,18 +14,32 @@ private data class GeocodingReply(
 private data class GeocodingResult(
     val name: String,
     val country: String? = null,
+    // State, prefecture, region; then county, district, city.
+    val admin1: String? = null,
+    val admin2: String? = null,
     val latitude: Double,
     val longitude: Double,
+)
+
+// One place a search found, with enough of where it is ([area]: district,
+// state, country) to tell two towns of the same name apart.
+data class SearchMatch(
+    val place: Place,
+    val area: String,
 )
 
 object Geocoding {
     private val json = Json { ignoreUnknownKeys = true }
 
-    // The first place in the reply, or null when nothing matched. Shown
-    // as "Name, Country" in full, "Name" for short.
-    fun firstPlace(text: String): Place? {
-        val first = json.decodeFromString(GeocodingReply.serializer(), text).results.firstOrNull() ?: return null
-        val full = if (first.country.isNullOrBlank()) first.name else "${first.name}, ${first.country}"
-        return Place(full, first.name, first.latitude, first.longitude)
-    }
+    // Every place in the reply, best match first; empty when nothing
+    // matched. Shown as "Name, State, Country" in full, "Name" for short.
+    fun matches(text: String): List<SearchMatch> =
+        json.decodeFromString(GeocodingReply.serializer(), text).results.map { r ->
+            val full = listOf(r.name, r.admin1, r.country).named().joinToString(", ")
+            val area = listOf(r.admin2, r.admin1, r.country).named().joinToString(", ")
+            SearchMatch(Place(full, r.name, r.latitude, r.longitude), area)
+        }
+
+    // The parts that say something: no blanks, no repeats ("Tokyo, Tokyo").
+    private fun List<String?>.named(): List<String> = filterNotNull().filter { it.isNotBlank() }.distinct()
 }

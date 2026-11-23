@@ -15,21 +15,39 @@ class SearchTest {
     private fun resource(name: String) = checkNotNull(javaClass.classLoader?.getResource(name)).readText()
 
     private val rochester = resource("geocoding-rochester.json")
+    private val portland = resource("geocoding-portland.json")
     private val forecast = resource("open-meteo-adelaide.json")
 
     private fun controller(geocode: suspend (String) -> String) =
         WeatherController(WeatherCache(tmp.root.resolve("w.json")), fetch = { forecast }, geocode = geocode)
 
     @Test
-    fun readsTheFirstMatch() {
-        val place = Geocoding.firstPlace(rochester)!!
-        assertEquals("Rochester, United States", place.fullName)
-        assertEquals("Rochester", place.shortName)
+    fun readsAMatchWithItsState() {
+        val match = Geocoding.matches(rochester).single()
+        assertEquals("Rochester, New York, United States", match.place.fullName)
+        assertEquals("Rochester", match.place.shortName)
+        assertEquals("Monroe, New York, United States", match.area)
     }
 
     @Test
-    fun noResultsMeansNoPlace() {
-        assertNull(Geocoding.firstPlace("""{"generationtime_ms":0.15}"""))
+    fun readsEveryMatchInOrder() {
+        val matches = Geocoding.matches(portland)
+        assertEquals(10, matches.size)
+        assertEquals("Portland, Oregon, United States", matches[0].place.fullName)
+        assertEquals("Portland, Maine, United States", matches[1].place.fullName)
+    }
+
+    @Test
+    fun leavesOutMissingAndRepeatedParts() {
+        val reply = """{"results":[{"name":"Tokyo","admin1":"Tokyo","country":"Japan","latitude":35.7,"longitude":139.7}]}"""
+        val match = Geocoding.matches(reply).single()
+        assertEquals("Tokyo, Japan", match.place.fullName)
+        assertEquals("Tokyo, Japan", match.area)
+    }
+
+    @Test
+    fun noResultsMeansNoMatches() {
+        assertEquals(emptyList<SearchMatch>(), Geocoding.matches("""{"generationtime_ms":0.15}"""))
     }
 
     @Test
@@ -37,8 +55,8 @@ class SearchTest {
         runBlocking {
             val c = controller { rochester }
             c.search("  Rochester ")
-            assertEquals("Rochester, United States", c.currentPlace.fullName)
-            assertEquals("Rochester, United States", c.weather!!.place.fullName)
+            assertEquals("Rochester, New York, United States", c.currentPlace.fullName)
+            assertEquals("Rochester, New York, United States", c.weather!!.place.fullName)
             assertEquals(WeatherStatus.Fresh, c.status)
             assertNull(c.searchNote)
         }
@@ -73,7 +91,7 @@ class SearchTest {
     @Test
     fun theQueryIsEncoded() {
         assertEquals(
-            "https://geocoding-api.open-meteo.com/v1/search?count=1&language=en&name=New+York",
+            "https://geocoding-api.open-meteo.com/v1/search?count=10&language=en&name=New+York",
             OpenMeteo.geocodingUrl("New York"),
         )
     }
