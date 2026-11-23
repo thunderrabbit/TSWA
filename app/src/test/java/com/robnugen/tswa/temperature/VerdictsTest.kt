@@ -27,9 +27,37 @@ class VerdictsTest {
     }
 
     @Test
-    fun aboveEveryBandIsOvenTerritory() {
+    fun justAboveBoilingIsOvenTerritory() {
+        assertEquals("Oven territory", title(100.1))
         assertEquals("Oven territory", title(150.0))
-        assertEquals("Oven territory", title(1_000.0))
+        assertEquals("Oven territory", title(327.4))
+    }
+
+    @Test
+    fun aHotValueKeepsTheHottestMilestonePassed() {
+        assertEquals("Lead melts", title(400.0))
+        assertEquals("Gold melts", title(1_100.0))
+        assertEquals("Boron melts", title(2_100.0))
+        assertEquals("Tungsten melts", title(5_000.0))
+        assertEquals("Surface of the Sun", title(6_000.0))
+        assertEquals("The core of the Sun", title(20_000_000.0))
+    }
+
+    @Test
+    fun aColdValueShowsTheNextMilestoneUp() {
+        assertEquals("The afterglow of the Big Bang", title(-272.0))
+        assertEquals("Hydrogen boils", title(-260.0))
+        assertEquals("Liquid nitrogen boils", title(-200.0))
+        assertEquals("Oxygen liquefies", title(-190.0))
+        assertEquals("Mercury freezes", title(-39.0))
+    }
+
+    @Test
+    fun landmarksAreInOrderAndBandsLineUp() {
+        val temps = Verdicts.landmarks.map { it.celsius }
+        assertEquals(temps.sorted(), temps)
+        assertEquals("Healthy elephant", title(36.0))
+        assertEquals("Boron melts", title(2_076.0))
     }
 
     @Test
@@ -41,6 +69,6 @@ class VerdictsTest {
     fun everyPresetIsInsidePhysics() {
         Verdicts.presets.forEach { assert(it.celsius >= Scale.ABSOLUTE_ZERO_C) }
         assertEquals(10, Verdicts.presets.size)
-        assertEquals(13, Verdicts.landmarks.size)
+        assertEquals(36, Verdicts.landmarks.size)
     }
 }
