@@ -22,6 +22,7 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -42,6 +43,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.robnugen.tswa.BuildConfig
 import com.robnugen.tswa.R
+import com.robnugen.tswa.weather.Place
 
 // Where the converter starts when there is no weather to seed it.
 private const val DEFAULT_CONVERTER_C = 22.2
@@ -52,6 +54,9 @@ fun TswaApp(state: AppState) {
     var converterC by rememberSaveable { mutableDoubleStateOf(DEFAULT_CONVERTER_C) }
     // Each tab keeps its own scroll position, as the web page did.
     val scrolls = Tab.entries.associateWith { rememberScrollState() }
+    // Fetch the weather once at start: Adelaide until saved places and
+    // onboarding (mg #897, #899) choose the place.
+    LaunchedEffect(Unit) { state.weather.load(Place.ADELAIDE) }
     Column(
         Modifier
             .fillMaxSize()
@@ -77,12 +82,12 @@ fun TswaApp(state: AppState) {
                     )
                 }
 
-                Tab.Settings -> {
-                    SettingsPage(enabled = state.enabledScales, onToggle = state::toggleScale)
+                Tab.Weather -> {
+                    WeatherPage(state.weather.weather, state.weather.status, state.scale)
                 }
 
-                else -> {
-                    TabPage(current)
+                Tab.Settings -> {
+                    SettingsPage(enabled = state.enabledScales, onToggle = state::toggleScale)
                 }
             }
             Footer()
@@ -126,19 +131,6 @@ private fun Footer() {
         textAlign = TextAlign.Center,
         modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
     )
-}
-
-// An empty page that only says which tab it is; later issues fill them.
-@Composable
-private fun TabPage(tab: Tab) {
-    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
-        Text(
-            stringResource(tab.title),
-            color = TswaColors.Text,
-            fontSize = 22.sp,
-            fontWeight = FontWeight.SemiBold,
-        )
-    }
 }
 
 // The web tab bar: equal-width tabs, the chosen one amber with an amber
