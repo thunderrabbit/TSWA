@@ -15,6 +15,7 @@ object TswaColors {
     val Amber = css("#FFB454") // --accent
     val OnAmber = css("#1A1206") // text on an amber pill
     val Cyan = css("#57C7FF") // --accent2
+    val Warn = css("#FF8A7A") // a search that found nothing or failed
     val TabBar = css("#0E1626") // .tabbar background
 
     private fun css(hex: String) = Color(AndroidColor.parseColor(hex))

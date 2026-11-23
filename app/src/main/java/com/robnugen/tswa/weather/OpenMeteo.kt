@@ -12,6 +12,7 @@ import java.net.URLEncoder
 object OpenMeteo {
     private const val FORECAST = "https://api.open-meteo.com/v1/forecast"
     private const val GEOCODING = "https://geocoding-api.open-meteo.com/v1/search"
+    private const val GEOCODING_MATCHES = 10
     private const val TIMEOUT_MS = 15_000
     private const val HTTP_OK = 200
     private const val ERROR_BODY_CHARS = 300
@@ -33,10 +34,10 @@ object OpenMeteo {
             "uv_index_max,precipitation_probability_max" +
             "&forecast_days=10&timezone=auto"
 
-    // The first match only, in English, as the web version asked.
+    // Several matches, in English, so same-named towns can be told apart.
     fun geocodingUrl(query: String): String {
         val name = URLEncoder.encode(query, Charsets.UTF_8.name())
-        return "$GEOCODING?count=1&language=en&name=$name"
+        return "$GEOCODING?count=$GEOCODING_MATCHES&language=en&name=$name"
     }
 
     suspend fun fetchForecast(place: Place): String = get(forecastUrl(place))
