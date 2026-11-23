@@ -2,6 +2,7 @@ package com.robnugen.tswa.temperature
 
 import org.junit.Assert.assertEquals
 import org.junit.Test
+import java.util.Locale
 
 class ScaleTest {
     private val eps = 1e-9
@@ -69,6 +70,54 @@ class ScaleTest {
     fun leavesAScaleThatIsNoLongerEnabled() {
         assertEquals(Scale.R, Scale.next(Scale.F, setOf(Scale.C, Scale.R)))
         assertEquals(Scale.C, Scale.next(Scale.F, setOf(Scale.C)))
+    }
+
+    @Test
+    fun belowFiveThousandKeepsOneDecimal() {
+        assertEquals("3422.0°C", Scale.C.format(3_422.0))
+        assertEquals("4228.5°R", Scale.R.format(2_076.0))
+        assertEquals("4999.9°C", Scale.C.format(4_999.9))
+    }
+
+    @Test
+    fun fromFiveThousandShowsThreeFiguresWithCommas() {
+        assertEquals("5,000°C", Scale.C.format(5_000.0))
+        assertEquals("5,000°C", Scale.C.format(4_999.96))
+        assertEquals("5,500°C", Scale.C.format(5_498.85))
+        assertEquals("9,930°F", Scale.F.format(5_498.85))
+        assertEquals("5,770K", Scale.K.format(5_498.85))
+        assertEquals("10,400°R", Scale.R.format(5_498.85))
+        assertEquals("36,500°R", Scale.R.format(20_000.0))
+        assertEquals("180,000°R", Scale.R.format(99_726.85))
+        assertEquals("999,000°C", Scale.C.format(999_499.0))
+        assertEquals("20,000", Scale.C.format(20_000.0, withSymbol = false))
+    }
+
+    @Test
+    fun fromAMillionReadsInWords() {
+        assertEquals("1 million °C", Scale.C.format(999_999.0))
+        assertEquals("1 million °C", Scale.C.format(1_000_000.0))
+        assertEquals("1.8 million °R", Scale.R.format(1_000_000.0))
+        assertEquals("1.23 million °C", Scale.C.format(1_234_000.0))
+        assertEquals("27 million °R", Scale.R.format(15_000_000.0))
+        assertEquals("100 billion °C", Scale.C.format(100_000_000_000.0))
+        assertEquals("10 trillion °C", Scale.C.format(10_000_000_000_000.0))
+        assertEquals("10 trillion K", Scale.K.format(10_000_000_000_000.0))
+        assertEquals("18 trillion °F", Scale.F.format(10_000_000_000_000.0))
+        assertEquals("18 trillion", Scale.R.format(10_000_000_000_000.0, withSymbol = false))
+        assertEquals("1,000 quadrillion °C", Scale.C.format(1e18))
+    }
+
+    @Test
+    fun bigNumbersIgnoreThePhoneLocale() {
+        val saved = Locale.getDefault()
+        try {
+            Locale.setDefault(Locale.GERMANY)
+            assertEquals("20,000°C", Scale.C.format(20_000.0))
+            assertEquals("1.8 million °R", Scale.R.format(1_000_000.0))
+        } finally {
+            Locale.setDefault(saved)
+        }
     }
 
     @Test
