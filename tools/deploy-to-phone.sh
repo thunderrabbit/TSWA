@@ -28,7 +28,6 @@ SECRETS=${TSWA_SECRETS:-$REPO/../TSWA-secrets}
 # The SDK's adb: older system adb builds lack wireless pairing.
 ADB=$ANDROID_HOME/platform-tools/adb
 PACKAGE=com.robnugen.tswa
-INDEX=app/src/main/assets/www/index.html
 
 die() { echo "deploy-to-phone: $*" >&2; exit 1; }
 
@@ -58,13 +57,6 @@ name="$base.$code"
 echo "Installed versionCode: ${installed:-none}; building $name (versionCode $code)"
 
 # --- build -------------------------------------------------------------
-# CI writes the version into the web UI with sed before building; do the
-# same, and put the file back afterwards however the script exits.
-backup=$(mktemp)
-cp "$INDEX" "$backup"
-trap 'cp "$backup" "$INDEX"; rm -f "$backup"' EXIT
-sed -i "s/__VERSION__/$name/" "$INDEX"
-
 TSWA_KEYSTORE_PATH="$SECRETS/tswa-release.jks" \
 TSWA_KEY_ALIAS=tswa \
 TSWA_KEYSTORE_PASSWORD=$(tr -d '\r\n' < "$SECRETS/password.txt") \

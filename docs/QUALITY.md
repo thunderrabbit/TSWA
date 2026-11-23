@@ -11,7 +11,10 @@ grandfathered warnings. A new finding fails the Quality workflow.
 | --- | --- | --- |
 | ktlint | Kotlin style and formatting (official code style, pinned in `.editorconfig`) | 1.8.0 |
 | detekt | Kotlin static analysis: complexity, bug patterns, smells. Config is `detekt.yml` in the repo root, the tool's own defaults written out in full | 1.23.8 |
-| ESLint | The JavaScript inside `app/src/main/assets/www/index.html`, extracted by eslint-plugin-html. Rules are ESLint's recommended set with browser globals; config is `eslint.config.js` | 9 (see package.json) |
+
+Unit tests (JUnit, under `app/src/test/`) run in the same workflow:
+`gradle :app:testDebugUnitTest`. They cover the logic that has no UI,
+such as the scale conversions, the tap's step order and the verdicts.
 
 Android Lint is deliberately not here: it needs the full Android SDK
 and a Gradle build, so if it is ever adopted it belongs in the release
@@ -30,25 +33,32 @@ $JAVA_HOME/bin/java -jar ~/workspace/tools/detekt/detekt-cli.jar \
   --config detekt.yml --input app/src/main/java
 ```
 
-JavaScript (Node required):
-
-```
-npm ci
-npm run lint:js
-```
-
 ## In CI
 
-`.github/workflows/quality.yml` runs all three on every push to
+`.github/workflows/quality.yml` runs all of them on every push to
 master and every pull request. The release workflow also calls it as
 its first job, and the release build `needs` that job: a red Quality
 run means no release is built. That dependency was added on
 2026-11-22 at Rob's direction, the day the tools landed.
 
+## Compose naming
+
+Jetpack Compose functions are PascalCase by convention (`Header`,
+`TabBar`): they read as pieces of UI, not actions. Both tools are told
+to skip their lowercase function-name rule for functions annotated
+`@Composable` (`.editorconfig` for ktlint, `FunctionNaming` in
+`detekt.yml`); every other function keeps the rule.
+
 ## One convention worth naming
 
-A `catch` in the web UI is never silently empty. Storage access in a
-WebView can throw, and the app must not die for it, so the catch stays
-— but it carries a comment saying what was given up (persisting,
-caching, restoring). ESLint's `no-empty` and `no-unused-vars` rules
-are what enforce this.
+A `catch` is never silently empty. Storage access can throw, and the
+app must not die for it, so the catch stays — but it says what was
+given up (persisting, caching, restoring). detekt's `EmptyCatchBlock`
+and `SwallowedException` rules enforce this.
+
+## History
+
+Until mg #891 (2026-11-23) the UI was a web page inside a WebView, and
+ESLint checked its JavaScript. The page and ESLint went when the
+native rewrite began; the page survives in git history (see
+`docs/BUILDING.md`).

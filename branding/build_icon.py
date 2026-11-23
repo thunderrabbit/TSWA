@@ -25,7 +25,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 CLONE = os.environ.get("TSWA_CLONE", os.path.dirname(HERE))
 FONT = os.path.join(HERE, "Poppins-Bold.ttf")
 
-NAVY = "#182642"      # app palette: deepest panel navy in index.html
+NAVY = "#182642"      # app palette: TswaColors.Navy (the web UI's --card2)
 SKY_LOW = "#2a3f6b"   # sky lightening towards the horizon
 CYAN = "#57c7ff"      # app accent (Celsius)
 AMBER = "#ffb454"     # app warm accent (Fahrenheit)
