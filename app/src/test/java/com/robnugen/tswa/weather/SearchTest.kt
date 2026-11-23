@@ -3,6 +3,7 @@ package com.robnugen.tswa.weather
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -59,6 +60,65 @@ class SearchTest {
             assertEquals("Rochester, New York, United States", c.weather!!.place.fullName)
             assertEquals(WeatherStatus.Fresh, c.status)
             assertNull(c.searchNote)
+        }
+
+    @Test
+    fun severalMatchesAreOfferedNotLoaded() =
+        runBlocking {
+            val c = controller { portland }
+            c.search("Portland")
+            assertEquals(10, c.choices.size)
+            assertEquals(SearchNote("Which “Portland”?"), c.searchNote)
+            assertEquals(Place.ADELAIDE, c.currentPlace)
+        }
+
+    @Test
+    fun pickingAChoiceLoadsItAndClearsTheList() =
+        runBlocking {
+            val c = controller { portland }
+            c.search("Portland")
+            val maine = c.choices.first { it.place.fullName == "Portland, Maine, United States" }
+            c.load(maine.place)
+            assertEquals("Portland, Maine, United States", c.currentPlace.fullName)
+            assertEquals(emptyList<SearchMatch>(), c.choices)
+            assertNull(c.searchNote)
+        }
+
+    @Test
+    fun savedPlacesAreNotOfferedAgain() =
+        runBlocking {
+            val c = controller { portland }
+            val oregon = Geocoding.matches(portland)[0].place
+            c.search("Portland", saved = listOf(oregon))
+            assertEquals(9, c.choices.size)
+            assertTrue(c.choices.none { it.place == oregon })
+        }
+
+    @Test
+    fun theOnlyUnsavedMatchLoadsAtOnce() =
+        runBlocking {
+            val all = Geocoding.matches(portland).map { it.place }
+            val c = controller { portland }
+            c.search("Portland", saved = all.drop(1))
+            assertEquals(emptyList<SearchMatch>(), c.choices)
+            assertEquals(all[0].fullName, c.currentPlace.fullName)
+        }
+
+    @Test
+    fun whenEveryMatchIsSavedTheFirstIsShown() =
+        runBlocking {
+            val c = controller { rochester }
+            c.search("Rochester", saved = Geocoding.matches(rochester).map { it.place })
+            assertEquals("Rochester, New York, United States", c.currentPlace.fullName)
+        }
+
+    @Test
+    fun aNewSearchOrTypingDropsTheChoices() =
+        runBlocking {
+            val c = controller { portland }
+            c.search("Portland")
+            c.clearSearch()
+            assertEquals(emptyList<SearchMatch>(), c.choices)
         }
 
     @Test
