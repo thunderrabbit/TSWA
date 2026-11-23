@@ -6,10 +6,12 @@ import kotlinx.coroutines.withContext
 import java.io.IOException
 import java.net.HttpURLConnection
 import java.net.URL
+import java.net.URLEncoder
 
 // Open-Meteo's free forecast API: no key, CC BY 4.0 (attributed in the app).
 object OpenMeteo {
     private const val FORECAST = "https://api.open-meteo.com/v1/forecast"
+    private const val GEOCODING = "https://geocoding-api.open-meteo.com/v1/search"
     private const val TIMEOUT_MS = 15_000
     private const val HTTP_OK = 200
     private const val ERROR_BODY_CHARS = 300
@@ -31,11 +33,21 @@ object OpenMeteo {
             "uv_index_max,precipitation_probability_max" +
             "&forecast_days=10&timezone=auto"
 
+    // The first match only, in English, as the web version asked.
+    fun geocodingUrl(query: String): String {
+        val name = URLEncoder.encode(query, Charsets.UTF_8.name())
+        return "$GEOCODING?count=1&language=en&name=$name"
+    }
+
+    suspend fun fetchForecast(place: Place): String = get(forecastUrl(place))
+
+    suspend fun fetchGeocoding(query: String): String = get(geocodingUrl(query))
+
     // The raw response body. Throws IOException on any network or HTTP
-    // failure; the caller falls back to the cache.
-    suspend fun fetchForecast(place: Place): String =
+    // failure; the caller decides what to show instead.
+    private suspend fun get(url: String): String =
         withContext(Dispatchers.IO) {
-            val connection = URL(forecastUrl(place)).openConnection() as HttpURLConnection
+            val connection = URL(url).openConnection() as HttpURLConnection
             try {
                 connection.connectTimeout = TIMEOUT_MS
                 connection.readTimeout = TIMEOUT_MS
