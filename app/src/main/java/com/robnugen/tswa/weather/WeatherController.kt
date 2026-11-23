@@ -43,13 +43,21 @@ class WeatherController(
     var searchNote by mutableStateOf<String?>(null)
         private set
 
-    suspend fun load(place: Place) {
+    // Fetch the weather for [place]. [rename] may name the place from the
+    // forecast itself (onboarding names the person's location that way).
+    suspend fun load(
+        place: Place,
+        rename: (Forecast) -> Place = { place },
+    ) {
         currentPlace = place
         searchNote = null
         status = WeatherStatus.Loading
         status =
             try {
-                val fresh = CachedWeather(place, Forecast.parse(fetch(place)), clock())
+                val forecast = Forecast.parse(fetch(place))
+                val named = rename(forecast)
+                currentPlace = named
+                val fresh = CachedWeather(named, forecast, clock())
                 weather = fresh
                 cache.save(fresh)
                 WeatherStatus.Fresh

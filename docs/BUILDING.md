@@ -67,3 +67,35 @@ git show b4dcfdd:app/src/main/assets/www/index.html
 
 Screenshots of it running are outside the repo, in
 `~/work/rob/tswa/TSWA-rewrite-screenshots/pre/` on Rob's machine.
+
+## Testing on an emulator
+Some things cannot be tried on a phone that is in daily use: onboarding
+only runs on a fresh install or after every saved place is deleted. An
+emulator is the safe place for those (set up 2026-11-23 for mg #899):
+
+```
+SDK=~/Android/Sdk
+$SDK/cmdline-tools/latest/bin/sdkmanager "emulator" "system-images;android-34;google_apis;x86_64"
+$SDK/cmdline-tools/latest/bin/avdmanager create avd -n tswa-test \
+  -k "system-images;android-34;google_apis;x86_64" -d pixel_7a
+$SDK/emulator/emulator -avd tswa-test -no-window -no-audio -no-snapshot &
+ANDROID_SERIAL=emulator-5554 tools/deploy-to-phone.sh
+```
+
+With the phone also connected, set `ANDROID_SERIAL` on every command.
+`adb -s emulator-5554 shell pm clear com.robnugen.tswa` gives a fresh
+install, on the emulator only.
+
+The emulator has no network location, so a coarse location request is
+never answered there. Give it mock providers instead:
+
+```
+E="adb -s emulator-5554"
+$E shell appops set 2000 android:mock_location allow
+for p in fused network; do
+  $E shell cmd location providers add-test-provider $p
+  $E shell cmd location providers set-test-provider-enabled $p true
+  $E shell cmd location providers set-test-provider-location $p --location 35.6895,139.6917
+done
+```
+
