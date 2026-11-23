@@ -24,18 +24,27 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.robnugen.tswa.weather.SearchNote
 
 private val fieldShape = RoundedCornerShape(10.dp)
 
 // "Search a place…" and Go, at the top of the Weather tab. The keyboard's
 // search key searches too, and the keyboard closes once a search starts.
+// The search's message shows right under the box, where the eye already is.
 @Composable
-fun SearchRow(onSearch: (String) -> Unit) {
+fun SearchRow(
+    note: SearchNote?,
+    onSearch: (String) -> Unit,
+    onEdit: () -> Unit,
+) {
     var query by rememberSaveable { mutableStateOf("") }
     val keyboard = LocalSoftwareKeyboardController.current
     val focus = LocalFocusManager.current
@@ -51,7 +60,10 @@ fun SearchRow(onSearch: (String) -> Unit) {
     ) {
         BasicTextField(
             value = query,
-            onValueChange = { query = it },
+            onValueChange = {
+                query = it
+                onEdit()
+            },
             singleLine = true,
             textStyle = TextStyle(color = TswaColors.Text, fontSize = 15.sp),
             cursorBrush = SolidColor(TswaColors.Amber),
@@ -82,4 +94,20 @@ fun SearchRow(onSearch: (String) -> Unit) {
             }
         }
     }
+    if (note != null) SearchNoteLine(note)
+}
+
+// Read out by TalkBack too: a failed search changes nothing else on screen.
+@Composable
+private fun SearchNoteLine(note: SearchNote) {
+    Text(
+        note.text,
+        color = if (note.problem) TswaColors.Warn else TswaColors.Muted,
+        fontSize = 13.sp,
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(start = 4.dp, bottom = 8.dp)
+                .semantics { liveRegion = LiveRegionMode.Polite },
+    )
 }

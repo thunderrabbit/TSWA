@@ -6,6 +6,16 @@ import androidx.compose.runtime.setValue
 import kotlinx.serialization.SerializationException
 import java.io.IOException
 
+// A search's message; a [problem] is shown in a warning colour.
+data class SearchNote(
+    val text: String,
+    val problem: Boolean = false,
+) {
+    companion object {
+        fun problem(text: String) = SearchNote(text, problem = true)
+    }
+}
+
 enum class WeatherStatus {
     // A fetch is under way; any weather shown is the last good one.
     Loading,
@@ -39,9 +49,15 @@ class WeatherController(
         private set
 
     // What the last search has to say ("Searching…", nothing found, no
-    // network); null when there is nothing to say. Shown in the status line.
-    var searchNote by mutableStateOf<String?>(null)
+    // network); null when there is nothing to say. Shown under the search box.
+    var searchNote by mutableStateOf<SearchNote?>(null)
         private set
+
+    // The person is typing again or went elsewhere: the last search's
+    // message no longer applies.
+    fun clearSearch() {
+        searchNote = null
+    }
 
     // Fetch the weather for [place]. [rename] may name the place from the
     // forecast itself (onboarding names the person's location that way).
@@ -74,7 +90,7 @@ class WeatherController(
     suspend fun search(query: String) {
         val name = query.trim()
         if (name.isEmpty()) return
-        searchNote = "Searching…"
+        searchNote = SearchNote("Searching…")
         val lookup: Result<Place?> =
             try {
                 Result.success(Geocoding.firstPlace(geocode(name)))
@@ -85,11 +101,11 @@ class WeatherController(
             }
         lookup.fold(
             onSuccess = { place ->
-                if (place == null) searchNote = "No place found for “$name”." else load(place)
+                if (place == null) searchNote = SearchNote.problem("No place found for “$name”.") else load(place)
             },
             onFailure = { problem ->
                 onFailure(problem as Exception)
-                searchNote = "Search failed (offline?)."
+                searchNote = SearchNote.problem("Search failed (offline?).")
             },
         )
     }

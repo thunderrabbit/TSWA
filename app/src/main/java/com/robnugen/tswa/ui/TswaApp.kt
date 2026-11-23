@@ -114,7 +114,11 @@ private fun PageContent(
         }
 
         Tab.Weather -> {
-            SearchRow(onSearch = { query -> scope.launch { state.weather.search(query) } })
+            SearchRow(
+                note = state.weather.searchNote,
+                onSearch = { query -> scope.launch { state.weather.search(query) } },
+                onEdit = state.weather::clearSearch,
+            )
             PlaceChips(
                 saved = state.places.saved,
                 current = state.weather.currentPlace,

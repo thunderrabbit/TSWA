@@ -173,8 +173,8 @@ private fun HighLow(
     }
 }
 
-// Attribution, and how current the weather is; a search's message
-// takes the line over, as on the web version.
+// Attribution, and how current the weather is. Always shown: a search's
+// message goes under the search box instead (mg #903).
 @Composable
 private fun StatusLine(weather: WeatherController) {
     val context = LocalContext.current
@@ -188,7 +188,7 @@ private fun StatusLine(weather: WeatherController) {
             else -> ""
         }
     Text(
-        weather.searchNote ?: "Weather: Open-Meteo (CC BY 4.0)$tail",
+        "Weather: Open-Meteo (CC BY 4.0)$tail",
         color = TswaColors.Muted,
         fontSize = 12.sp,
         textAlign = TextAlign.Center,

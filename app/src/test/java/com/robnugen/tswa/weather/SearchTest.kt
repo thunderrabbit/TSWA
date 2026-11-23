@@ -48,8 +48,10 @@ class SearchTest {
         runBlocking {
             val c = controller { """{"generationtime_ms":0.15}""" }
             c.search("Qzxqvwplk")
-            assertEquals("No place found for “Qzxqvwplk”.", c.searchNote)
+            assertEquals(SearchNote.problem("No place found for “Qzxqvwplk”."), c.searchNote)
             assertEquals(Place.ADELAIDE, c.currentPlace)
+            c.clearSearch()
+            assertNull(c.searchNote)
         }
 
     @Test
@@ -57,7 +59,7 @@ class SearchTest {
         runBlocking {
             val c = controller { throw IOException("airplane mode") }
             c.search("Rochester")
-            assertEquals("Search failed (offline?).", c.searchNote)
+            assertEquals(SearchNote.problem("Search failed (offline?)."), c.searchNote)
         }
 
     @Test
