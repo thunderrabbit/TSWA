@@ -24,7 +24,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
@@ -45,18 +44,21 @@ import com.robnugen.tswa.BuildConfig
 import com.robnugen.tswa.R
 import com.robnugen.tswa.weather.Place
 
-// Where the converter starts when there is no weather to seed it.
-private const val DEFAULT_CONVERTER_C = 22.2
-
 @Composable
 fun TswaApp(state: AppState) {
     var current by rememberSaveable { mutableStateOf(Tab.Weather) }
-    var converterC by rememberSaveable { mutableDoubleStateOf(DEFAULT_CONVERTER_C) }
     // Each tab keeps its own scroll position, as the web page did.
     val scrolls = Tab.entries.associateWith { rememberScrollState() }
     // Fetch the weather once at start: Adelaide until saved places and
     // onboarding (mg #897, #899) choose the place.
     LaunchedEffect(Unit) { state.weather.load(Place.ADELAIDE) }
+    // The converter starts from the weather's temperature.
+    val currentC =
+        state.weather.weather
+            ?.forecast
+            ?.current
+            ?.temperatureC
+    LaunchedEffect(currentC) { currentC?.let(state::seedConverter) }
     Column(
         Modifier
             .fillMaxSize()
@@ -74,16 +76,22 @@ fun TswaApp(state: AppState) {
             when (current) {
                 Tab.Converter -> {
                     ConverterPage(
-                        celsius = converterC,
+                        celsius = state.converterC,
                         scale = state.scale,
                         enabled = state.enabledScales,
                         onStep = state::stepScale,
-                        onSet = { converterC = it },
+                        onSet = state::setConverter,
                     )
                 }
 
                 Tab.Weather -> {
-                    WeatherPage(state.weather.weather, state.weather.status, state.scale)
+                    WeatherPage(
+                        weather = state.weather.weather,
+                        status = state.weather.status,
+                        scale = state.scale,
+                        enabled = state.enabledScales,
+                        onStep = state::stepScale,
+                    )
                 }
 
                 Tab.Settings -> {
