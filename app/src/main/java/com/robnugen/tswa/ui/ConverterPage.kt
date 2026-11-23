@@ -88,16 +88,6 @@ fun ConverterPage(
     LandmarksCard(scale)
 }
 
-// The hint names only the scales the tap visits.
-private fun stepHint(enabled: Set<Scale>): String {
-    val on = Scale.entries.filter { it in enabled }
-    return if (on.size == 1) {
-        "Only ${on[0].symbol} is on — add more in Settings"
-    } else {
-        "Tap the number to step " + on.joinToString(" → ") { it.symbol }
-    }
-}
-
 // One pill per enabled scale; the one shown is lit. Indicators only.
 @Composable
 private fun Pills(
