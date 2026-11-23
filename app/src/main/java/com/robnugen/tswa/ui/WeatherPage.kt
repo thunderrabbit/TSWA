@@ -27,10 +27,10 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.robnugen.tswa.temperature.Scale
-import com.robnugen.tswa.weather.CachedWeather
 import com.robnugen.tswa.weather.Current
 import com.robnugen.tswa.weather.Forecast
 import com.robnugen.tswa.weather.Place
+import com.robnugen.tswa.weather.WeatherController
 import com.robnugen.tswa.weather.WeatherStatus
 import com.robnugen.tswa.weather.WeatherView
 import com.robnugen.tswa.weather.Wmo
@@ -53,15 +53,15 @@ private val lowStyle = TextStyle(color = TswaColors.Muted, fontSize = 16.sp)
 // and steps the one app-wide scale.
 @Composable
 fun WeatherPage(
-    weather: CachedWeather?,
-    status: WeatherStatus,
-    scale: Scale,
+    weather: WeatherController,
+    control: ScaleControl,
     enabled: Set<Scale>,
-    onStep: () -> Unit,
+    onSearch: (String) -> Unit,
 ) {
-    val forecast = weather?.forecast
-    val control = ScaleControl(scale, onStep)
-    Hero(weather?.place ?: Place.ADELAIDE, forecast?.current, control)
+    val shown = weather.weather
+    val forecast = shown?.forecast
+    SearchRow(onSearch)
+    Hero(shown?.place ?: weather.currentPlace, forecast?.current, control)
     if (forecast != null) {
         HighLow(forecast, control)
         Text(
@@ -75,7 +75,7 @@ fun WeatherPage(
         TenDays(forecast, control)
         Details(forecast, control)
     }
-    StatusLine(weather, status)
+    StatusLine(weather)
 }
 
 // Place, conditions, the big number and "Feels like".
@@ -166,23 +166,22 @@ private fun HighLow(
     }
 }
 
-// Attribution, and how current the weather is.
+// Attribution, and how current the weather is; a search's message
+// takes the line over, as on the web version.
 @Composable
-private fun StatusLine(
-    weather: CachedWeather?,
-    status: WeatherStatus,
-) {
+private fun StatusLine(weather: WeatherController) {
     val context = LocalContext.current
-    val updated = weather?.let { AndroidDateFormat.getTimeFormat(context).format(Date(it.fetchedAtMillis)) }
+    val updated =
+        weather.weather?.let { AndroidDateFormat.getTimeFormat(context).format(Date(it.fetchedAtMillis)) }
     val tail =
         when {
-            status == WeatherStatus.Offline -> " · Last good data — offline"
-            status == WeatherStatus.Loading -> " · Updating…"
+            weather.status == WeatherStatus.Offline -> " · Last good data — offline"
+            weather.status == WeatherStatus.Loading -> " · Updating…"
             updated != null -> " · Updated $updated"
             else -> ""
         }
     Text(
-        "Weather: Open-Meteo (CC BY 4.0)$tail",
+        weather.searchNote ?: "Weather: Open-Meteo (CC BY 4.0)$tail",
         color = TswaColors.Muted,
         fontSize = 12.sp,
         textAlign = TextAlign.Center,

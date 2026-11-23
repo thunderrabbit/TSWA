@@ -25,6 +25,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -43,12 +44,14 @@ import androidx.compose.ui.unit.sp
 import com.robnugen.tswa.BuildConfig
 import com.robnugen.tswa.R
 import com.robnugen.tswa.weather.Place
+import kotlinx.coroutines.launch
 
 @Composable
 fun TswaApp(state: AppState) {
     var current by rememberSaveable { mutableStateOf(Tab.Weather) }
     // Each tab keeps its own scroll position, as the web page did.
     val scrolls = Tab.entries.associateWith { rememberScrollState() }
+    val scope = rememberCoroutineScope()
     // Fetch the weather once at start: Adelaide until saved places and
     // onboarding (mg #897, #899) choose the place.
     LaunchedEffect(Unit) { state.weather.load(Place.ADELAIDE) }
@@ -86,11 +89,10 @@ fun TswaApp(state: AppState) {
 
                 Tab.Weather -> {
                     WeatherPage(
-                        weather = state.weather.weather,
-                        status = state.weather.status,
-                        scale = state.scale,
+                        weather = state.weather,
+                        control = ScaleControl(state.scale, state::stepScale),
                         enabled = state.enabledScales,
-                        onStep = state::stepScale,
+                        onSearch = { query -> scope.launch { state.weather.search(query) } },
                     )
                 }
 
