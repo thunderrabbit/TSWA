@@ -26,3 +26,14 @@ fun switchHint(enabled: Set<Scale>): String {
         "Tap any temperature to switch " + scales.joinToString(" / ") { it.symbol }
     }
 }
+
+// How a screen reader should say a temperature: "18.8 degrees Celsius",
+// "291.9 kelvin". [lead] names it ("Feels like", "High", "Low").
+fun spokenTemperature(
+    celsius: Double,
+    scale: Scale,
+    lead: String = "",
+): String {
+    val unit = if (scale == Scale.K) "kelvin" else "degrees ${scale.fullName}"
+    return listOf(lead, scale.format(celsius, withSymbol = false), unit).filter { it.isNotBlank() }.joinToString(" ")
+}

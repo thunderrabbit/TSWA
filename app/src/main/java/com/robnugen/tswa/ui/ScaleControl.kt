@@ -9,6 +9,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import com.robnugen.tswa.temperature.Scale
 
@@ -36,13 +38,26 @@ fun Temperature(
         maxLines = 1,
         softWrap = false,
         modifier =
-            modifier.clickable(
-                interactionSource = interaction,
-                indication = null,
-                enabled = celsius != null,
-                role = Role.Button,
-                onClickLabel = "Step to the next temperature scale",
-                onClick = control.onStep,
-            ),
+            modifier
+                .clickable(
+                    interactionSource = interaction,
+                    indication = null,
+                    enabled = celsius != null,
+                    role = Role.Button,
+                    onClickLabel = "Step to the next temperature scale",
+                    onClick = control.onStep,
+                ).semantics {
+                    if (celsius != null) {
+                        contentDescription = spokenTemperature(celsius, control.scale, spokenLead(prefix))
+                    }
+                },
     )
 }
+
+// The visible prefixes as words: "↑ " is "High", "↓ " is "Low".
+private fun spokenLead(prefix: String): String =
+    when (prefix.trim()) {
+        "↑" -> "High"
+        "↓" -> "Low"
+        else -> prefix.trim()
+    }
