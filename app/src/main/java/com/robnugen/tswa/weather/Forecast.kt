@@ -43,6 +43,8 @@ data class Hourly(
     @SerialName("weather_code") val weatherCode: List<Int?>,
     @SerialName("precipitation_probability") val rainPercent: List<Int?>,
     val visibility: List<Double?>,
+    // 1 by day, 0 by night. Missing from forecasts cached before mg #907.
+    @SerialName("is_day") val isDay: List<Int?> = emptyList(),
 )
 
 @Serializable

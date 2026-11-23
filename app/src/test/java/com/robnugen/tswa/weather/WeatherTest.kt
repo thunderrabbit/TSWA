@@ -40,7 +40,7 @@ class WeatherTest {
             "pressure_msl",
             "wind_direction_10m",
             "is_day",
-            "precipitation_probability,visibility",
+            "precipitation_probability,visibility,is_day",
             "uv_index_max",
             "precipitation_probability_max",
             "forecast_days=10",
