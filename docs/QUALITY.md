@@ -12,6 +12,10 @@ grandfathered warnings. A new finding fails the Quality workflow.
 | ktlint | Kotlin style and formatting (official code style, pinned in `.editorconfig`) | 1.8.0 |
 | detekt | Kotlin static analysis: complexity, bug patterns, smells. Config is `detekt.yml` in the repo root, the tool's own defaults written out in full | 1.23.8 |
 
+Unit tests (JUnit, under `app/src/test/`) run in the same workflow:
+`gradle :app:testDebugUnitTest`. They cover the logic that has no UI,
+such as the scale conversions, the tap's step order and the verdicts.
+
 Android Lint is deliberately not here: it needs the full Android SDK
 and a Gradle build, so if it is ever adopted it belongs in the release
 workflow, not this one.
@@ -31,7 +35,7 @@ $JAVA_HOME/bin/java -jar ~/workspace/tools/detekt/detekt-cli.jar \
 
 ## In CI
 
-`.github/workflows/quality.yml` runs both on every push to
+`.github/workflows/quality.yml` runs all of them on every push to
 master and every pull request. The release workflow also calls it as
 its first job, and the release build `needs` that job: a red Quality
 run means no release is built. That dependency was added on
